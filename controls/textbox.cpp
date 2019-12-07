@@ -1,5 +1,4 @@
 #include "textbox.h"
-#include "../errors.h"
 
 #include <fstream>
 #include <vector>
@@ -7,7 +6,7 @@
 int CTextboxResources::Load(const char* Filename) // clean it up: font filename with ws, general remake, change delimiter
 {
     const std::string FormatSignature = "IFCTRL_RESOURCE_TEXTBOX";
-    int Error = LOAD_OK;
+    int Error = 0;
     std::ifstream File;
     File.open(Filename, std::ios_base::binary);
     if(File.is_open() && File.good())
@@ -37,16 +36,16 @@ int CTextboxResources::Load(const char* Filename) // clean it up: font filename 
                     m_Sprite = sf::Sprite(m_Texture, Pos);
                 }
                 else
-                    Error = LOAD_ERROR_CORRUPTED_TEXTURE;
+                    Error = 1;
             }
             else
-                Error = LOAD_ERROR_NO_TEXTURE;
+                Error = 2;
         }
         else
-            Error = LOAD_ERROR_WRONG_FORMAT;
+            Error = 3;
     }
     else
-        Error = LOAD_ERROR_NO_FILE;
+        Error = 4;
     File.close();
     return Error;
 }
