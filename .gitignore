@@ -1,0 +1,12 @@
+*.obj
+Release/
+Debug/
+SFML/
+*.wav
+*.ttf
+*.png
+*.ifc
+*.dll
+*.exe
+*.ogg
+*.vcxproj*
