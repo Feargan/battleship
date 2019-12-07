@@ -1,0 +1,53 @@
+#pragma once
+
+#include <iostream>
+#include <iomanip>
+#include <type_traits>
+#include <stdexcept>
+
+enum CRotation
+{
+	LOWER_BOUND = 0,
+	NONE,
+	QUARTER,
+	HALF,
+	THREE_QUARTER,
+	UPPER_BOUND,
+};
+
+enum CRotationDir
+{
+	CLOCKWISE = 1,
+	KEEP = 0,
+	COUNTER_CLOCKWISE = -1,
+};
+
+template<typename T>
+class CMatrix
+{
+private:
+	T * * m_Array;
+	unsigned int m_BaseWidth;
+	unsigned int m_BaseHeight;
+	unsigned int m_Width;
+	unsigned int m_Height;
+	int m_Rotation;
+public:
+	CMatrix();
+	CMatrix(unsigned int Width, unsigned int Height);
+	~CMatrix();
+
+	// copy constructor/assignment
+	// move constructor/assignment
+
+	void insert(unsigned int x, unsigned int y, const CMatrix<T>& other); //
+	void move(unsigned int x, unsigned int y, CMatrix<T>& other); //
+	void rotate(int Dir);
+
+	T& at(unsigned int x, unsigned int y);
+	const T& at(unsigned int x, unsigned int y) const;
+	template<typename U> void set(unsigned int x, unsigned int y, U&& v);
+private:
+	void evaluate(unsigned int& x, unsigned int& y) const;
+};
+

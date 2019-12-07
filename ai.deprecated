@@ -1,0 +1,363 @@
+#include "aiplayer.h"
+
+CAiPlayer::CAiPlayer(IGameController* Controller) : IPlayer(Controller)
+{
+}
+
+
+CAiPlayer::~CAiPlayer()
+{
+}
+
+#include <iostream>
+#include <cstdlib>
+
+void CAiPlayer::play()
+{
+	const IPlayer* Victim = getController()->getSuggestedVictim();
+	auto& Context = m_Contexts[Victim];
+	this;
+	auto& TilesToCheck = Context.m_TilesToCheck;
+	while(TilesToCheck.size())
+	{	
+		CGraphTile* Tile = *Context.m_TilesToCheck.begin();
+
+		if (Tile->getState() == CGraphTile::CState::MISS)
+		{
+			CPos Pos = Tile->getPos();
+			for (int i = -1; i <= 1; i++)
+			{
+				for (int j = -1; j <= 1; j++)
+				{
+					int x = Pos.first + i;
+					int y = Pos.second + j;
+					if (!Context.m_Field.checkPoint(x, y))
+						continue;
+					if (i == 0 && j == 0)
+						continue;
+					CGraphTile* Child = &Context.m_Field.at(x, y); // add missed tile to all neighbour focuses
+					if (Child->getRoot())
+						Context.m_Targets[Child->getRoot()].m_Tiles.insert(Tile);
+				}
+			}
+			TilesToCheck.erase(TilesToCheck.begin());
+			continue;
+		}
+
+		CGraphTile* Root = nullptr;
+		std::unordered_set<CGraphTile*> Search;
+		std::unordered_set<CGraphTile*> Found;
+		Search.insert(Tile);
+		Found.insert(Tile);
+
+		while (Search.size()) // should be deque, with unordered_set it's not a BFS
+		{
+			CGraphTile* Parent = *Search.begin();
+			Search.erase(Search.begin());
+			CPos Pos = Parent->getPos();
+			for (int i = -1; i <= 1; i++)
+			{
+				for (int j = -1; j <= 1; j++)
+				{
+					int x = Pos.first + i;
+					int y = Pos.second + j;
+					if (!Context.m_Field.checkPoint(x, y))
+						continue;
+					if (i == 0 && j == 0)
+						continue;
+					CGraphTile* Child = &Context.m_Field.at(x, y);
+					if (Found.find(Child) != Found.end())
+						continue;
+
+					CGraphTile::CState State = Child->getState();
+					if (State == CGraphTile::CState::EMPTY)
+						continue;
+
+					Found.insert(Child);
+					if (State == CGraphTile::CState::MISS)
+						continue;
+					auto It = TilesToCheck.find(Child);
+					if (It != TilesToCheck.end())
+						TilesToCheck.erase(It);
+
+					CGraphTile* ChildRoot = Child->getRoot();
+					if (!Root && ChildRoot) // found existing
+						Root = ChildRoot;
+					else if (Root && ChildRoot && Root != ChildRoot)
+					{
+						for (auto t : Context.m_Targets[ChildRoot].m_Tiles)
+							Found.insert(t);
+
+						// check last match
+						// check min-max boundaries
+
+						Context.m_Targets[Root].m_LastMatch = std::max(Context.m_Targets[Root].m_LastMatch, Context.m_Targets[ChildRoot].m_LastMatch);
+						Context.m_Targets.erase(ChildRoot);
+					}
+					else
+						Search.insert(Child);
+				}
+			}
+		}
+		if (!Root)
+		{
+			Root = *std::find_if(Found.begin(), Found.end(), [](const CGraphTile* t) -> bool { return t->getState() != CGraphTile::CState::MISS; });
+		}
+		
+		CPos TopLeft, BottomRight;
+		auto& UpdatedTarget = Context.m_Targets[Root];
+		if (!UpdatedTarget.m_Tiles.size())
+		{
+			BottomRight = TopLeft = Root->getPos();
+		}
+		else
+		{
+			TopLeft = UpdatedTarget.m_TopLeft;
+			BottomRight = UpdatedTarget.m_BottomRight;
+		}
+		for (auto t : Found)
+		{
+			if (t->getState() != CGraphTile::CState::MISS)
+			{
+				if (TopLeft.first > t->getPos().first)
+					TopLeft.first = t->getPos().first;
+				if (TopLeft.second > t->getPos().second)
+					TopLeft.second = t->getPos().second;
+				if (BottomRight.first < t->getPos().first)
+					BottomRight.first = t->getPos().first;
+				if (BottomRight.second < t->getPos().second)
+					BottomRight.second = t->getPos().second;
+				t->setRoot(Root);
+			}
+			UpdatedTarget.m_Tiles.insert(t);
+		}
+		UpdatedTarget.m_TopLeft = TopLeft;
+		UpdatedTarget.m_BottomRight = BottomRight;
+		TilesToCheck.erase(Context.m_TilesToCheck.begin());
+		for (auto t : Context.m_Targets[Root].m_Tiles)
+		{
+			std::cout << t->getPos().first << " " << t->getPos().second << ", state: ";
+			switch (t->getState())
+			{
+			case CGraphTile::CState::MISS:
+				std::cout << "miss";
+				break;
+			case CGraphTile::CState::DESTROYED:
+				std::cout << "destroyed ";
+				Root->setState(CGraphTile::CState::DESTROYED); // tmp
+			case CGraphTile::CState::HIT:
+				std::cout << "hit ";
+				break;
+			}
+			if (t == Root)
+				std::cout << "<--- root";
+			std::cout << std::endl;
+		}
+		std::cout << "top left: " << TopLeft.first << " " << TopLeft.second << std::endl;
+		std::cout << std::endl;
+	}
+	const auto BoardSize = getController()->getPreset()->getBoardSize();
+	auto& Targets = Context.m_Targets;
+	auto It = Targets.begin(); // erase destroyed
+	for (; It != Targets.end(); )
+	{
+		if (It->first->getState() == CGraphTile::CState::DESTROYED)
+		{
+			std::cout << "target deleted" << std::endl;
+			for (auto t : It->second.m_Tiles)
+			{
+				for (int i = -1; i <= 1; i++)
+				{
+					for (int j = -1; j <= 1; j ++ )
+					{
+						int xch = t->getPos().first + i;
+						int ych = t->getPos().second + j;
+						if ((t->getState() == CGraphTile::CState::HIT || t->getState() == CGraphTile::CState::DESTROYED) &&
+							Context.m_Field.checkPoint(xch, ych) && Context.m_Field[{xch, ych}].getState() == CGraphTile::CState::EMPTY)
+						{
+							Context.m_Field[{xch, ych}] = CGraphTile(CGraphTile::CState::MISS, { xch, ych });
+							Context.m_Empty--;
+						}
+					}
+				}
+			}
+			It = Targets.erase(It);
+		}
+		else
+			It++;
+	}
+
+	
+	if (!Targets.size())
+	{
+		std::cout << Context.m_Empty;
+		int Index = rand() % Context.m_Empty;
+		int i;
+		for (i = 0; Index > 0; i++)
+		{
+			if (Context.m_Field.at(i%BoardSize.first, i / BoardSize.first).getState() == CGraphTile::CState::EMPTY)
+				Index--;
+		}
+		i--;
+		
+		getController()->attack(this, Victim, i%BoardSize.first, i/BoardSize.first);
+		return;
+	}
+
+	auto& Target = (*Targets.begin()).second;
+	const CShipTemplate* Template;
+	while ((Template = getController()->getPreset()->getTemplate(Target.m_LastMatch)) && Target.m_LastMatch < getController()->getPreset()->numTemplates())
+	{
+		CShipLayout Layout = Template->getLayout();
+		Layout.setRotation(Target.m_MatchingRotation);
+		int TargetWidth = Target.m_BottomRight.first - Target.m_TopLeft.first + 1;
+		int TargetHeight = Target.m_BottomRight.second - Target.m_TopLeft.second + 1;
+
+		bool Match = false;
+		auto TargetSize = std::make_pair(Target.m_BottomRight.first - Target.m_TopLeft.first+1, Target.m_BottomRight.second - Target.m_BottomRight.second+1);
+		do
+		{
+			
+			for (int i = 0; i < Layout.getWidth()-TargetSize.first+1 ; i++)
+			{
+				Match = false;
+				int LayoutX = Target.m_TopLeft.first - i;
+				if (LayoutX < 0 || LayoutX + Layout.getWidth() > BoardSize.first)
+					continue;
+				for (int j = 0; j < Layout.getHeight()-TargetSize.second+1; j++)
+				{
+					int LayoutY = Target.m_TopLeft.second - j;
+					if (LayoutY < 0 || LayoutY + Layout.getHeight() > BoardSize.second)
+						continue;
+					
+					auto NextAttack = std::make_pair(-1, -1);
+					for (auto& t : Target.m_Tiles)
+					{
+						Match = true;
+						int x = t->getPos().first;// - Target.m_TopLeft.first;
+						int y = t->getPos().second;// - Target.m_TopLeft.second;
+
+						switch (t->getState())
+						{
+						case CGraphTile::CState::MISS:
+							if (x >= LayoutX && y >= LayoutY && x < LayoutX + Layout.getWidth() && y < LayoutY + Layout.getHeight() && Layout.at(x - Target.m_TopLeft.first + i, y - Target.m_TopLeft.second + j) != 0) //  if the checked tile is placed in the boundaries of layout and is not zero
+							{
+								Match = false;
+								std::cout << "didn't match because miss " << x << " " << y << std::endl;
+							}
+							break;
+						case CGraphTile::CState::HIT:
+							if (x < LayoutX || y < LayoutY || x >= LayoutX + Layout.getWidth() || y >= LayoutY + Layout.getHeight()
+								|| Layout.at(x - Target.m_TopLeft.first + i, y - Target.m_TopLeft.second + j) != 1) // if the checked tile is outside the boundaries (uh - no need to check actly), aand not 1
+							{
+								Match = false;
+								std::cout << "didn't match because hit" << std::endl;
+							}
+							break;
+						}
+						if (!Match)
+						{
+							NextAttack = std::make_pair(-1, -1);
+							break;
+						}
+					NextAttackFound:
+						if (NextAttack == std::make_pair(-1, -1) && Context.m_Field.at(x, y).getState() != CGraphTile::CState::MISS)
+						{
+							for (int i = -1; i <= 1; i++)
+							{
+								for (int j = -1; j <= 1; j++)
+								{
+									int PosX = x - i, PosY = y - j;
+									if (PosX < BoardSize.first && PosY < BoardSize.second &&
+										Layout.checkPoint(PosX - LayoutX, PosY - LayoutY) && Layout[{PosX - LayoutX, PosY - LayoutY}] == 1
+										&& std::find_if(Target.m_Tiles.begin(), Target.m_Tiles.end(), [PosX, PosY](CGraphTile* Tile) -> bool { return Tile->getPos() == std::make_pair(PosX, PosY); }) == Target.m_Tiles.end())
+									{
+										NextAttack = std::make_pair(PosX, PosY);
+										std::cout << "next attack = " << PosX << " " << PosY << std::endl;
+										goto NextAttackFound;
+									}
+
+								}
+							}
+						}
+					}
+
+					if (Match)
+					{
+						Target.m_MatchingRotation = Layout.getRotation();
+						Target.m_LayoutPos = std::make_pair(LayoutX, LayoutY);
+						std::cout << "match found: " << Target.m_LastMatch << ", rotation: " << Target.m_MatchingRotation << ", lpos: " << LayoutX << " " << LayoutY << std::endl;
+						if (NextAttack == std::make_pair(-1, -1))
+						{
+							goto SearchAgain;
+						}
+						getController()->attack(this, Victim, NextAttack.first, NextAttack.second);
+						return;
+					}
+				}
+
+			}
+			SearchAgain:
+			Layout.rotate(CRotationDir::CLOCKWISE);
+		} while (Layout.getRotation() != CRotation::NONE);
+
+		Target.m_MatchingRotation = CRotation::NONE;
+		Target.m_LastMatch++;
+	}
+}
+
+const CAiPlayer::CField* CAiPlayer::getEnemyField(const IPlayer * Player) const
+{
+	auto It = m_Contexts.find(Player);
+	if (It != m_Contexts.end())
+		return &It->second.m_Field;
+	return nullptr;
+}
+
+void CAiPlayer::onEvent(const CGameEvent& Event)
+{
+	using CType = CGameEvent::CType;
+	switch (Event.m_Type)
+	{
+	case CType::GAME_STARTED:
+		onGameStarted();
+		break;
+	case CType::PLAYER_ATTACKED:
+		onPlayerAttacked(Event.m_PlayerAttackedEvent.m_Victim, Event.m_PlayerAttackedEvent.m_X, Event.m_PlayerAttackedEvent.m_Y, Event.m_PlayerAttackedEvent.m_State);
+		break;
+	}
+
+}
+
+void CAiPlayer::onPlayerAttacked(const IPlayer * Victim, int x, int y, CTile::CState State)
+{
+	if (Victim == this)
+		return;
+	if (m_Contexts.find(Victim) == m_Contexts.end()) // remove..?{
+		prepareNewBoard(Victim);
+	auto& Context = m_Contexts[Victim];
+	auto& Tile = Context.m_Field.at(x, y);
+	Tile = CGraphTile(State, {x, y});
+	if (State == CTile::CState::DESTROYED)
+	{
+		State = CTile::CState::HIT;
+	}
+	Context.m_Empty--;
+	Context.m_TilesToCheck.insert(&Tile);
+}
+
+void CAiPlayer::prepareNewBoard(const IPlayer * Enemy)
+{
+	auto Size = getController()->getPreset()->getBoardSize();
+	m_Contexts[Enemy].m_Field = CField(Size.first, Size.second);
+	m_Contexts[Enemy].m_Field.fill(CGraphTile(CTile::CState::EMPTY));
+	m_Contexts[Enemy].m_Empty = Size.first*Size.second;
+}
+
+void CAiPlayer::onGameStarted()
+{
+	m_Contexts.clear();
+	auto Players = getController()->getPlayers();
+	for (const IPlayer* p : Players)
+		prepareNewBoard(p);
+}
