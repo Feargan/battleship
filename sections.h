@@ -27,12 +27,12 @@ public:
 	~CSections();
 
 	CState loadFromFile(const char* Filename);
-	CState saveToFile(const char* Filename);
+	CState saveToFile(const char* Filename) const;
 	void loadFromBuffer(const std::vector<char>& Buffer);
-	void saveToBuffer(std::vector<char>& Buffer);
+	void saveToBuffer(std::vector<char>& Buffer) const;
 
-	const std::vector<char>* get(const char* Section);
-	template<typename T, typename std::enable_if<std::is_unsigned<T>::value>::type* = nullptr> std::optional<T>  getInt(const char* Section)
+	const std::vector<char>* get(const char* Section) const;
+	template<typename T, typename std::enable_if<std::is_unsigned<T>::value>::type* = nullptr> std::optional<T>  getInt(const char* Section) const
 	{
 		auto Vec = get(Section);
 		if (!Vec || Vec->size() < sizeof(T))
@@ -41,7 +41,7 @@ public:
 		readRaw(Value, &(*Vec)[0]);
 		return Value;
 	}
-	template<typename T, typename std::enable_if<!std::is_unsigned<T>::value>::type* = nullptr> std::optional<T> getInt(const char* Section)
+	template<typename T, typename std::enable_if<!std::is_unsigned<T>::value>::type* = nullptr> std::optional<T> getInt(const char* Section) const
 	{
 		auto Vec = get(Section);
 		if (!Vec || Vec->size() < sizeof(T))
@@ -76,18 +76,19 @@ public:
 		for (unsigned int i = 0; i < sizeof(T); i++)
 		{
 			Output <<= 8;
-			Output |= Buffer[i];
+			Output |= Buffer[i] & 0xff;// reinterpret_cast<const unsigned char*>(Buffer)[i];
 		}
 	}
 	template<typename T> static void rawWrite(T Value, char* Buffer)
 	{
 		for (unsigned int i = 0; i < sizeof(T); i++)
 		{
+			//Buffer[sizeof(T) - i - 1] = static_cast<char>(Value & 0xff);
 			Buffer[sizeof(T) - i - 1] = static_cast<char>(Value & 0xff);
 			Value >>= 8;
 		}
 	}
 private:
 	void createFromStream(std::istream& Input);
-	void writeToStream(std::ostream& Output);
+	void writeToStream(std::ostream& Output) const;
 };

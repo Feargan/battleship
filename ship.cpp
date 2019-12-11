@@ -3,7 +3,7 @@
 #include <iostream>
 
 CShip::CShip()
-	: m_Meta({ {0, 0}, CRotation::NONE, 0 }), m_Health(0)
+	: m_Meta({ {0, 0}, CRotation::CValue::NONE, 0 }), m_Health(0)
 {
 }
 

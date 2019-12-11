@@ -26,7 +26,6 @@ CState CSections::loadFromFile(const char* Filename)
 	std::ifstream File(Filename, std::ios_base::binary);
 	if (!File)
 		return CState::LOAD_ERROR_NO_FILE;
-	//constexpr unsigned int MAX_HEADER_SIZE = std::max(sizeof(SECTION_HEADER), sizeof(FILE_HEADER));
 	char Header[sizeof(FILE_HEADER)];
 	File.read(Header, sizeof(FILE_HEADER));
 	if (!File || std::memcmp(Header, FILE_HEADER, sizeof(FILE_HEADER)))
@@ -36,7 +35,7 @@ CState CSections::loadFromFile(const char* Filename)
 	return CState::LOAD_OK;
 }
 
-CState CSections::saveToFile(const char * Filename)
+CState CSections::saveToFile(const char * Filename) const
 {
 	static char ZeroBuffer[4 * sizeof(uint32_t)] = { 0 };
 	std::ofstream File;
@@ -45,16 +44,6 @@ CState CSections::saveToFile(const char * Filename)
 		return CState::SAVE_ERROR;
 	File.write(FILE_HEADER, sizeof(FILE_HEADER));
 	writeToStream(File);
-	/*for (auto &p : m_Sections)
-	{
-		File.write(SECTION_HEADER, sizeof(SECTION_HEADER));
-		char UintBuffer[sizeof(uint32_t)];
-		rawWrite(p.second.size(), UintBuffer);
-		File.write(UintBuffer, sizeof(uint32_t));
-		File.write(ZeroBuffer, sizeof(ZeroBuffer));
-		File << p.first << '\0';
-		File.write(&p.second[0], p.second.size());
-	}*/
 	return CState::SAVE_OK;
 }
 
@@ -64,7 +53,7 @@ void CSections::loadFromBuffer(const std::vector<char>& Buffer)
 	createFromStream(Stream);
 }
 
-void CSections::saveToBuffer(std::vector<char>& Buffer)
+void CSections::saveToBuffer(std::vector<char>& Buffer) const
 {
 	Buffer.clear();
 	std::ostringstream Stream;
@@ -73,7 +62,7 @@ void CSections::saveToBuffer(std::vector<char>& Buffer)
 	std::copy(StrBuffer.begin(), StrBuffer.end(), std::back_inserter(Buffer));
 }
 
-const std::vector<char>* CSections::get(const char * Section)
+const std::vector<char>* CSections::get(const char * Section) const
 {
 	auto It = m_Sections.find(std::string(Section));
 	if (It != m_Sections.end())
@@ -90,7 +79,7 @@ void CSections::createFromStream(std::istream& Input)
 {
 	m_Sections.clear();
 	char Header[sizeof(SECTION_HEADER)];
-	while (Input.read(Header, sizeof(SECTION_HEADER)) && Input.gcount() == sizeof(SECTION_HEADER)) // change to generic istream
+	while (Input.read(Header, sizeof(SECTION_HEADER)) && Input.gcount() == sizeof(SECTION_HEADER))
 	{
 		if (std::memcmp(Header, SECTION_HEADER, sizeof(SECTION_HEADER)))
 			break;
@@ -107,7 +96,7 @@ void CSections::createFromStream(std::istream& Input)
 	}
 }
 
-void CSections::writeToStream(std::ostream & Output)
+void CSections::writeToStream(std::ostream & Output) const
 {
 	static char ZeroBuffer[4 * sizeof(uint32_t)] = { 0 };
 	for (auto &p : m_Sections)

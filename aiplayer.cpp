@@ -134,10 +134,10 @@ void CAiPlayer::play()
 				}
 
 			}
-			Layout.rotate(CRotationDir::CLOCKWISE);
-		} while (Layout.getRotation() != CRotation::NONE);
+			Layout.rotate(CRotation::CDir::CLOCKWISE);
+		} while (Layout.getRotation() != CRotation::CValue::NONE);
 
-		Target.m_MatchingRotation = CRotation::NONE;
+		Target.m_MatchingRotation = CRotation::CValue::NONE;
 		Target.m_LastMatch++;
 	}
 }
@@ -228,7 +228,7 @@ void CAiPlayer::onPlayerAttacked(const IPlayer * Victim, int x, int y, CTile::CS
 				MainTarget.m_TopLeft = { std::min(MainTarget.m_TopLeft.first, ChildTarget.m_TopLeft.first), std::min(MainTarget.m_TopLeft.second, ChildTarget.m_TopLeft.second) };
 				MainTarget.m_BottomRight = { std::max(MainTarget.m_BottomRight.first, ChildTarget.m_BottomRight.first), std::max(MainTarget.m_BottomRight.second, ChildTarget.m_BottomRight.second) };
 				MainTarget.m_LastMatch = std::max(MainTarget.m_LastMatch, ChildTarget.m_LastMatch);
-				MainTarget.m_MatchingRotation = CRotation::NONE;
+				MainTarget.m_MatchingRotation = CRotation::CValue::NONE;
 				Context.m_Targets.erase(ChildRoot);
 			}
 		}

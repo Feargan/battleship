@@ -12,7 +12,7 @@ public:
 	struct CMeta
 	{
 		CPos m_Pos;
-		int m_Rotation;
+		CRotation m_Rotation;
 		unsigned int m_TemplateId;
 	};
 private:

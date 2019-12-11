@@ -33,7 +33,7 @@ public:
 
 	~CGameBoard();
 
-	bool canPlace(int x, int y, const CShipTemplate& Template);
+	bool canPlace(int x, int y, const CShipTemplate& Template) const;
 	bool place(int x, int y, const CShipTemplate& Template);
 	void remove(int x, int y);
 	bool isReady() const;

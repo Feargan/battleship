@@ -6,6 +6,11 @@ CShipTemplate::CShipTemplate(unsigned int Id, const CShipLayout& Layout, const s
 {
 }
 
+void CShipTemplate::rotate(CRotation::CDir Dir)
+{
+	m_Layout.rotate(Dir);
+}
+
 unsigned int CShipTemplate::getId() const
 {
 	return m_Id;

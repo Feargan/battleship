@@ -1,26 +1,11 @@
 #pragma once
 
+#include "rotation.h"
+
 #include <type_traits>
 #include <stdexcept>
 #include <functional>
 #include <string>
-
-enum CRotation
-{
-	LOWER_BOUND = 0,
-	NONE,
-	QUARTER,
-	HALF,
-	THREE_QUARTER,
-	UPPER_BOUND,
-};
-
-enum CRotationDir
-{
-	CLOCKWISE = 1,
-	KEEP = 0,
-	COUNTER_CLOCKWISE = -1,
-};
 
 template<typename T>
 class CMatrix
@@ -31,20 +16,20 @@ private:
 	int m_BaseHeight;
 	int m_Width;
 	int m_Height;
-	int m_Rotation;
+	CRotation m_Rotation;
 public:
 	CMatrix()
-		: m_BaseWidth(0), m_BaseHeight(0), m_Array(nullptr), m_Rotation(NONE)
+		: m_BaseWidth(0), m_BaseHeight(0), m_Array(nullptr), m_Rotation(CRotation::CValue::NONE)
 	{
-		rotate(CRotationDir::KEEP);
+		rotate(CRotation::CDir::NONE);
 	}
 	CMatrix(int Width, int Height)
-		: m_BaseWidth(Width), m_BaseHeight(Height), m_Rotation(NONE)
+		: m_BaseWidth(Width), m_BaseHeight(Height), m_Rotation(CRotation::CValue::NONE)
 	{
 		if (Width <= 0 || Height <= 0)
 			throw std::bad_alloc();
 		alloc();
-		rotate(CRotationDir::KEEP);
+		rotate(CRotation::CDir::NONE);
 	}
 	~CMatrix()
 	{
@@ -104,19 +89,15 @@ public:
 	{
 
 	}
-	void rotate(int Dir)
+	void rotate(CRotation::CDir Dir)
 	{
-		int Rotation = m_Rotation + Dir;
-		setRotation(Rotation);
+		m_Rotation += Dir;
+		setRotation(m_Rotation);
 	}
-	void setRotation(int Rotation)
+	void setRotation(CRotation Rotation)
 	{
-		if (Rotation >= UPPER_BOUND)
-			Rotation = LOWER_BOUND + 1;
-		if (Rotation <= LOWER_BOUND)
-			Rotation = UPPER_BOUND - 1;
 		m_Rotation = Rotation;
-		if (m_Rotation == QUARTER || m_Rotation == THREE_QUARTER)
+		if (m_Rotation.get() == CRotation::CValue::QUARTER || m_Rotation == CRotation::CValue::THREE_QUARTER)
 		{
 			m_Width = m_BaseHeight;
 			m_Height = m_BaseWidth;
@@ -127,7 +108,7 @@ public:
 			m_Height = m_BaseHeight;
 		}
 	}
-	int getRotation() const
+	CRotation getRotation() const
 	{
 		return m_Rotation;
 	}
@@ -227,19 +208,20 @@ private:
 	}
 	void evaluate(int& x, int& y) const
 	{
+		using CValue = CRotation::CValue;
 		int rX, rY;
 
-		switch (m_Rotation)
+		switch (m_Rotation.get())
 		{
-		case QUARTER:
+		case CValue::QUARTER:
 			rX = m_BaseWidth - 1 - y;
 			rY = x;
 			break;
-		case HALF:
+		case CValue::HALF:
 			rX = m_BaseWidth - 1 - x;
 			rY = m_BaseHeight - 1 - y;
 			break;
-		case THREE_QUARTER:
+		case CValue::THREE_QUARTER:
 			rX = y;
 			rY = m_BaseHeight - 1 - x;
 			break;

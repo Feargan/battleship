@@ -51,7 +51,7 @@ CGameBoard::~CGameBoard()
 
 }
 
-bool CGameBoard::canPlace(int x, int y, const CShipTemplate& Template)
+bool CGameBoard::canPlace(int x, int y, const CShipTemplate& Template) const
 {
 	if (m_Preset)
 	{
@@ -93,11 +93,13 @@ bool CGameBoard::place(int x, int y, const CShipTemplate& Template)
 	return true;
 }
 
+#include <iostream>
+
 void CGameBoard::remove(int x, int y)
 {
 	if (!m_Field.checkPoint(x, y))
 		return;
-	auto& Owner = m_Field.at(x, y).getOwner();
+	auto Owner = m_Field.at(x, y).getOwner();
 	if (!Owner)
 		return;
 	m_Field.fill(CTile(CState::EMPTY),
@@ -108,6 +110,7 @@ void CGameBoard::remove(int x, int y)
 			return false;
 		}
 	);
+	std::cout << Owner->getMeta().m_TemplateId;
 	m_ShipCounters[Owner->getMeta().m_TemplateId]--;
 	m_Ships.erase(std::remove_if(m_Ships.begin(), m_Ships.end(),
 		[Owner](const std::shared_ptr<CShip>& s) -> bool

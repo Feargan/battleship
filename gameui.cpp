@@ -132,7 +132,7 @@ void CGameUi::drawField(sf::RenderTarget& Target, sf::RenderStates States, const
 			default:
 				Spr = sf::Sprite(Assets.m_TxtTileEmpty);
 			}
-			Spr.setPosition(i*Assets.m_TileSize.x + Pos.x, j*Assets.m_TileSize.y + Pos.y);
+			Spr.setPosition(static_cast<float>(i*Assets.m_TileSize.x + Pos.x), static_cast<float>(j*Assets.m_TileSize.y + Pos.y));
 			Target.draw(Spr, States);
 		}
 	}
@@ -161,7 +161,7 @@ void CGameUi::drawField(sf::RenderTarget& Target, sf::RenderStates States, const
 			default:
 				Spr = sf::Sprite(Assets.m_TxtTileEmpty);
 			}
-			Spr.setPosition(i*Assets.m_TileSize.x + Pos.x, j*Assets.m_TileSize.y + Pos.y);
+			Spr.setPosition(static_cast<float>(i*Assets.m_TileSize.x + Pos.x), static_cast<float>(j*Assets.m_TileSize.y + Pos.y));
 			Target.draw(Spr, States);
 		}
 	}
@@ -181,7 +181,7 @@ void CGameUi::drawShips(sf::RenderTarget & Target, sf::RenderStates States, cons
 		float Width = Spr.getLocalBounds().width / 2.f, Height = Spr.getLocalBounds().height / 2.f;
 		Spr.setOrigin(TileSize.x/2.f, TileSize.y/2.f);
 		Spr.setPosition(Pos.x + Meta.m_Pos.first*TileSize.x + TileSize.x / 2.f, Pos.y + Meta.m_Pos.second*TileSize.y + TileSize.y / 2.f);
-		Spr.rotate(90.f * (Meta.m_Rotation - 1));
+		Spr.rotate(static_cast<float>(Meta.m_Rotation.degrees()));
 		
 		
 		Target.draw(Spr, States);
@@ -201,12 +201,19 @@ void CGameUi::onEvent(const CGameEvent & Event)
 	switch (Event.m_Type)
 	{
 	case CType::PLAYER_ATTACKED:
+	{
+		switch (Event.m_PlayerAttackedEvent.m_State)
 		{
-		if (Event.m_PlayerAttackedEvent.m_State == CTile::CState::MISS)
-			return;
-		playSound(m_Preset->getBasicAssets().m_SndHit);
+		case CTile::CState::HIT:
+			playSound(m_Preset->getBasicAssets().m_SndHit);
+			break;
+		case CTile::CState::MISS:
+			playSound(m_Preset->getBasicAssets().m_SndMiss);
+			break;
 		}
+
 		break;
+	}
 	case CType::PLAYER_LOST:
 		m_VictoryInfo.setPosition(200, 500);
 		m_Font.loadFromFile("arial.ttf");

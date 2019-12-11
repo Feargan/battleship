@@ -50,11 +50,11 @@ int CTextboxResources::Load(const char* Filename) // clean it up: font filename 
     return Error;
 }
 
-CTextbox::CTextbox(CInterface* Interface, CTextboxResources &Resources)
+CTextbox::CTextbox(CPanel* Interface, CTextboxResources &Resources)
        : IControl(Interface)
 {
     m_Text = "";
-    m_BasicResources = Resources;
+    m_Resources = Resources;
 
     m_Active = false;
 }
@@ -71,13 +71,13 @@ void CTextbox::update()
 void CTextbox::handleInput(sf::Event Event)
 {
     if(Event.type == sf::Event::MouseButtonPressed && Event.mouseButton.button == sf::Mouse::Button::Left
-       && getInterface()->GetCurrentFocus() == this)
+       && getPanel()->GetCurrentFocus() == this)
     {
         m_Active = true;
 		event(Event::PRESSED);
     }
     else if(Event.type == sf::Event::MouseButtonPressed && Event.mouseButton.button == sf::Mouse::Button::Left
-            && getInterface()->GetCurrentFocus() != this)
+            && getPanel()->GetCurrentFocus() != this)
     {
         m_Active = false;
     }
@@ -99,10 +99,10 @@ void CTextbox::handleInput(sf::Event Event)
 void CTextbox::draw(sf::RenderTarget& Target, sf::RenderStates states) const
 {
 	sf::Vector2f Pos(getPosition().left, getPosition().top);
-	sf::Sprite Spr(m_BasicResources.m_Texture);
+	sf::Sprite Spr(m_Resources.m_Texture);
 	Spr.setPosition(Pos);
-	Spr.setScale((float)getPosition().width / m_BasicResources.m_Size.x, (float)getPosition().height / m_BasicResources.m_Size.y);
-	sf::Text Content(m_Text, m_BasicResources.m_Font, m_BasicResources.m_FontSize);
+	Spr.setScale((float)getPosition().width / m_Resources.m_Size.x, (float)getPosition().height / m_Resources.m_Size.y);
+	sf::Text Content(m_Text, m_Resources.m_Font, m_Resources.m_FontSize);
 	Content.setPosition(Pos);
 	Content.setFillColor(sf::Color(0, 0, 0));
     Target.draw(Spr, states);

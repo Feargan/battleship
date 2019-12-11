@@ -1,7 +1,5 @@
-#ifndef IFCONTROL_H
-#define IFCONTROL_H
-
-#include "interface.h"
+#pragma once
+#include "panel.h"
 
 #include <SFML/Graphics/Rect.hpp>
 #include <SFML/Graphics/Drawable.hpp>
@@ -9,7 +7,7 @@
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/RenderStates.hpp>
 
-class CInterface;
+class CPanel;
 
 class IControl : public sf::Drawable
 {
@@ -23,17 +21,21 @@ public:
 protected:
 	//sf::Rect<int> m_Pos;
 private:
-    CInterface* m_Interface;
+    CPanel* m_Panel;
 	std::vector<CEventListener*> m_Listeners;
-	sf::Rect<int> m_Pos;
+	sf::Rect<float> m_Pos;
 public:
-    IControl(CInterface* Interface);
+    IControl(CPanel* Panel);
     virtual ~IControl();
+	IControl(const IControl& r) = delete;
+	IControl& operator=(const IControl& r) = delete;
+	IControl(IControl&& r) = delete;
+	IControl& operator=(IControl&& r) = delete;
 
-    CInterface* getInterface(){return m_Interface;}
+    CPanel* getPanel(){return m_Panel;}
 
-	void setPosition(const sf::Rect<int>& Pos);
-	const sf::Rect<int>& getPosition() const { return m_Pos; }
+	void setPosition(const sf::Rect<float>& Pos);
+	const sf::Rect<float>& getPosition() const;
 
 	void addListener(CEventListener* Listener);
 	void removeListener(CEventListener* Listener);
@@ -44,5 +46,3 @@ public:
 protected:
 	void event(int eventId);
 };
-
-#endif

@@ -1,19 +1,24 @@
 #include "interface_control.h"
 
-IControl::IControl(CInterface* Interface)
+IControl::IControl(CPanel* Interface)
 {
-    m_Interface = Interface;
-    m_Interface->addControl(CInterface::ControlKey(), this);
+    m_Panel = Interface;
+    m_Panel->addControl(CPanel::ControlKey(), this);
 }
 
 IControl::~IControl()
 {
-    m_Interface->deleteControl(CInterface::ControlKey(), this);
+    m_Panel->deleteControl(CPanel::ControlKey(), this);
 }
 
-void IControl::setPosition(const sf::Rect<int>& Pos)
+void IControl::setPosition(const sf::Rect<float>& Pos)
 {
 	m_Pos = Pos;
+}
+
+const sf::Rect<float>& IControl::getPosition() const
+{
+	return m_Pos;
 }
 
 void IControl::addListener(CEventListener* Listener)

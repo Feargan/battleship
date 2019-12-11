@@ -19,6 +19,8 @@ public:
 	//CShipTemplate(){} //!
 	CShipTemplate(unsigned int Id, const CShipLayout& Layout, const std::shared_ptr<void>& External, const CGamePreset* Preset = nullptr);
 
+	void rotate(CRotation::CDir Dir);
+
 	unsigned int getId() const;
 	const CShipLayout& getLayout() const;
 	const std::shared_ptr<void>& getExternal() const;

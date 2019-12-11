@@ -60,35 +60,26 @@ void printField(const CShipLayout& Field)
 
 int main()
 {
-	std::ios_base::sync_with_stdio(false);
-	/*CGameBoard b = CGameBoard();
-	CGameBoard a;
-	a = b;
+	/*std::ios_base::sync_with_stdio(false);
+	sf::Texture a1, a2, a3;
+	const char FontName[] = "Arial.ttf";
+	a1.loadFromFile("normal.png");
+	a2.loadFromFile("hover.png");
+	a3.loadFromFile("pressed.png");
+	CSections s;
+	s.put("FONT_NAME", std::vector<char>(FontName, FontName + sizeof(FontName) - 1));
+	CExtendedPreset::writeResource(s, "TXT_NORMAL", a1.copyToImage(), "png");
+	CExtendedPreset::writeResource(s, "TXT_HOVER", a2.copyToImage(), "png");
+	CExtendedPreset::writeResource(s, "TXT_PRESSED", a3.copyToImage(), "png");
+	s.putInt<int32_t>("FONT_SIZE", 12);
+	s.saveToFile("button.irc");*/
     CProgram Program;
     if(!Program.init())
     {
        std::cout << "startup failed, exitting" << std::endl;
        return -1;
     }
-    Program.run();*/
-	CSections Sections;
-	CShipLayout Layout(3, 6);
-	Layout.fill(0);
-	Layout[{0, 0}] = 1; Layout[{1, 1}] = 1; Layout[{2, 5}] = 1; Layout[{2, 2}] = 1;
-	CExtendedPreset::writeLayout(Sections, "L_1", Layout);
-	Sections.putInt("X", -4);
-	Sections.saveToFile("preset.bsp");
-
-	CSections Load;
-	Load.loadFromFile("preset.bsp");
-	auto Layout2 = CExtendedPreset::readLayout(Load, "L_1");
-	if (!Layout2)
-	{
-		std::cout << "error" << std::endl;
-		return 0;
-	}
-	printField(*Layout2);
-	std::cout << *Sections.getInt<int>("X");
+    Program.run();
 
     return 0;
 }

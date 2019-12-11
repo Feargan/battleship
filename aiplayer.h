@@ -32,13 +32,13 @@ public:
 private:
 	struct CTarget
 	{
-		CTarget() : m_LastMatch(0), m_MatchingRotation(CRotation::NONE) {}
+		CTarget() : m_LastMatch(0), m_MatchingRotation(CRotation::CValue::NONE) {}
 		std::unordered_set<CGraphTile*> m_Tiles;
 		CPos m_TopLeft;
 		CPos m_BottomRight;
 		CPos m_LayoutPos;
 		unsigned int m_LastMatch;
-		int m_MatchingRotation;
+		CRotation m_MatchingRotation;
 	};
 	struct CContext
 	{

@@ -1,9 +1,9 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
-#include "interface.h"
-#include "controls/button.h"
-#include "controls/textbox.h"
+#include "panel.h"
+#include "button.h"
+#include "textbox.h"
 #include "gameui.h"
 
 #include <SFML/Graphics.hpp>
@@ -16,8 +16,7 @@ class CProgram
     int m_WindowHeight;
     bool m_FullscreenMode;
 
-    CInterface m_Interface;
-    CButtonResources m_ButtonResources;
+    CPanel m_Panel;
     CTextboxResources m_TextboxResources;
 	CTextbox* m_Textbox_Message;
 

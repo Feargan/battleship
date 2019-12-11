@@ -1,7 +1,5 @@
-#ifndef IFCONTROL_TEXTBOX_H
-#define IFCONTROL_TEXTBOX_H
-
-#include "../interface_control.h"
+#pragma once
+#include "interface_control.h"
 
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
@@ -35,9 +33,9 @@ private:
 
     bool m_Active;
 
-    CTextboxResources m_BasicResources;
+    CTextboxResources m_Resources;
 public:
-    CTextbox(CInterface* Interface, CTextboxResources &Resources); // move rcs to static section? or no
+    CTextbox(CPanel* Panel, CTextboxResources &Resources); // move rcs to static section? or no
     ~CTextbox(){}
 
     const std::string& GetText(){return m_Text;}
@@ -48,5 +46,3 @@ public:
 protected:
 	virtual void draw(sf::RenderTarget& Target, sf::RenderStates states) const override;
 };
-
-#endif
