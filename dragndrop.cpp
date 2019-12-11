@@ -48,6 +48,16 @@ bool CDragNDrop::isHeld() const
 	return m_Held;
 }
 
+void CDragNDrop::rotate(CRotation::CDir Dir) // ...
+{
+	m_Rotation += Dir;
+}
+
+void CDragNDrop::resetRotation()
+{
+	m_Rotation = CRotation::CValue::NONE;
+}
+
 sf::Vector2i CDragNDrop::getCursorPos() const
 {
 	return m_CursorPos;
@@ -69,6 +79,8 @@ void CDragNDrop::draw(sf::RenderTarget & Target, sf::RenderStates states) const
 	{
 		Spr.setColor(sf::Color(255, 255, 255, 128));
 		Spr.setPosition(static_cast<float>(m_CursorPos.x), static_cast<float>(m_CursorPos.y));
+		Spr.rotate(m_Rotation.degrees());
+		Spr.setPosition(Spr.getPosition().x - (Spr.getGlobalBounds().left - getCursorPos().x), Spr.getPosition().y - (Spr.getGlobalBounds().top - getCursorPos().y));
 		Target.draw(Spr);
 	}
 }
