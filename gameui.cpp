@@ -1,47 +1,30 @@
 #include "gameui.h"
-
-#include <SFML/Graphics.hpp>
-#include <SFML/Audio.hpp>
+#include "interfaceutils.h"
 
 #include <algorithm>
 
 const unsigned int CGameUi::MaxVoices;
 
-CGameUi::CGameUi(IGameController* Controller, CExtendedPreset* Preset)
-	: m_Controller(Controller), m_Preset(Preset), m_Player(Controller), m_CPU(Controller), m_NextVoice(0)
+CGameUi::CGameUi(IGameController* Controller, CExtendedPreset* Preset, CLocalPlayer* Player, const CGameBoard* PlayerBoard)
+	: m_Controller(Controller), m_Preset(Preset), m_NextVoice(0), m_Player(Player), m_PlayerBoard(PlayerBoard)
 {
 	if (!m_Controller || !m_Preset)
-		return;
-
+		throw std::exception("CGameUi(): game controller or preset not set");
 	if (m_Preset != m_Controller->getPreset())
-		throw;
-
-	CGameBoard Board1 = CGameBoard(m_Preset);
-	Board1.place(0, 0, *m_Preset->getTemplate(0));
-	Board1.place(0, 2, *m_Preset->getTemplate(0));
-	Board1.place(3, 5, *m_Preset->getTemplate(1));
-	Board1.place(4, 8, *m_Preset->getTemplate(2));
-	Board1.place(9, 1, *m_Preset->getTemplate(3));
-
-	CGameBoard Board2(m_Preset);
-	Board2.place(1, 9, *m_Preset->getTemplate(0));
-	Board2.place(4, 1, *m_Preset->getTemplate(0));
-	Board2.place(0, 0, *m_Preset->getTemplate(1));
-	Board2.place(0, 7, *m_Preset->getTemplate(2));
-	Board2.place(9, 1, *m_Preset->getTemplate(3));
+		throw std::exception("CGameUi(): game controller has incorrect preset");
+	if (!m_Controller->isInProgress())
+		throw std::exception("CGameUi(): game not in progress");
 
 	m_PlayerBoardPos = { 0, 0 };
-	m_EnemyBoardPos = { 400, 0 };
 	m_PlayerHelperPos = { 0, 300 };
-	m_EnemyHelperPos = { 400, 300 };
 
-	m_PlayerBoard = m_Controller->seat(&m_Player, std::move(Board1));
-	m_EnemyBoard = m_Controller->seat(&m_CPU, std::move(Board2));
-
-	m_Player.setName("test1");
-	m_CPU.setName("aea2");
 	m_Controller->addObserver(this);
-	m_Controller->start();
+
+	for (auto p : m_Controller->getPlayers())
+	{
+		if (p != m_Player)
+			m_Enemies.push_back(p);
+	}
 }
 
 
@@ -59,38 +42,26 @@ void CGameUi::handleInput(sf::Event Event)
 {
 	if (!m_Preset)
 		return;
-	if (Event.type == sf::Event::MouseButtonPressed && Event.mouseButton.button == sf::Mouse::Button::Left)
-	{
-		int x = Event.mouseButton.x;
-		int y = Event.mouseButton.y;
-		int TileWidth = m_Preset->getBasicAssets().m_TileSize.x;
-		int TileHeight = m_Preset->getBasicAssets().m_TileSize.y;
-		int BoardWidth = m_Preset->getBoardSize().first;
-		int BoardHeight = m_Preset->getBoardSize().second;
-		if (m_Controller->whoseTurn() == &m_Player
-			&& x > m_PlayerHelperPos.x && y > m_PlayerHelperPos.y
-			&& x < m_PlayerHelperPos.x + TileWidth * BoardWidth && y < m_PlayerHelperPos.y + TileHeight * BoardHeight)
-		{
-			x -= m_PlayerHelperPos.x;
-			y -= m_PlayerHelperPos.y;
-			x /= TileWidth;
-			y /= TileHeight;
-			m_Controller->attack(&m_Player, &m_CPU, x, y);
-		}
-		else if (m_Controller->whoseTurn() == &m_CPU
-				&& x > m_EnemyHelperPos.x && y > m_EnemyHelperPos.y
-				&& x < m_EnemyHelperPos.x + TileWidth * BoardWidth && y < m_EnemyHelperPos.y + TileHeight * BoardHeight)
-		{
-			x -= m_EnemyHelperPos.x;
-			y -= m_EnemyHelperPos.y;
-			x /= TileWidth;
-			y /= TileHeight;
-			m_Controller->attack(&m_CPU, &m_Player, x, y);
-		}
-	}
-	else if (Event.type == sf::Event::MouseButtonReleased && Event.mouseButton.button == sf::Mouse::Button::Left)
-	{
 
+	if (Event.type == sf::Event::MouseMoved)
+	{
+		for (unsigned i = 0; i < m_Enemies.size(); i++)
+		{
+			m_CurrentTile = CInterfaceUtils::getTilePos({ m_Preset->getBoardSize().first, m_Preset->getBoardSize().second }, m_Preset->getBasicAssets().m_TileSize, m_PlayerHelperPos + sf::Vector2i(i * 300, 0), { Event.mouseMove.x, Event.mouseMove.y });
+			if (m_CurrentTile)
+			{
+				m_CurrentEnemy = m_Enemies[i];
+				break;
+			}
+		}
+		
+	}
+	else if (Event.type == sf::Event::MouseButtonPressed && Event.mouseButton.button == sf::Mouse::Button::Left)
+	{
+		if (m_CurrentTile && m_Controller->whoseTurn() == m_Player)
+		{
+			m_Controller->attack(m_Player, m_CurrentEnemy, m_CurrentTile->x, m_CurrentTile->y);
+		}
 	}
 }
 
@@ -98,18 +69,20 @@ void CGameUi::draw(sf::RenderTarget & Target, sf::RenderStates States) const
 {
 	if (!m_Controller || !m_Preset)
 		return;
-	drawField(Target, States, m_PlayerBoard->getField(), m_PlayerBoardPos);
-	drawShips(Target, States, m_PlayerBoard->getShips(), m_PlayerBoardPos);
-	drawField(Target, States, (*m_Player.getEnemyField(&m_CPU)).m_Field, m_PlayerHelperPos);
-	drawShips(Target, States, (*m_Player.getEnemyField(&m_CPU)).m_DestroyedShips, m_PlayerHelperPos);
-
-	drawField(Target, States, m_EnemyBoard->getField(), m_EnemyBoardPos);
-	drawField(Target, States, *m_CPU.getEnemyField(&m_Player), m_EnemyHelperPos);
+	// if m_Controller has startd
+	// continue
+	CInterfaceUtils::drawField(Target, States, *m_Preset, m_PlayerBoard->getField(), m_PlayerBoardPos, {});
+	CInterfaceUtils::drawShips(Target, States, *m_Preset, m_PlayerBoard->getShips(), m_PlayerBoardPos);
+	for (unsigned i = 0; i < m_Enemies.size(); i++)
+	{
+		CInterfaceUtils::drawField(Target, States, *m_Preset, m_Player->getEnemyField(m_Enemies[i])->m_Field, m_PlayerHelperPos + sf::Vector2i(i * 300, 0), m_Enemies[i] == m_CurrentEnemy ? m_CurrentTile : std::optional<sf::Vector2i>());
+		CInterfaceUtils::drawShips(Target, States, *m_Preset, m_Player->getEnemyField(m_Enemies[i])->m_DestroyedShips, m_PlayerHelperPos + sf::Vector2i(i * 300, 0));
+	}
 
 	Target.draw(m_VictoryInfo);
 }
 
-void CGameUi::drawField(sf::RenderTarget& Target, sf::RenderStates States, const CGameBoard::CField& Field, CScreenPos Pos) const
+/*void CGameUi::drawField(sf::RenderTarget& Target, sf::RenderStates States, const CGameBoard::CField& Field, sf::Vector2i Pos) const
 {
 	const auto& Assets = m_Preset->getBasicAssets();
 	for (int i = 0; i < Field.getWidth(); i++)
@@ -136,9 +109,9 @@ void CGameUi::drawField(sf::RenderTarget& Target, sf::RenderStates States, const
 			Target.draw(Spr, States);
 		}
 	}
-}
+}*/
 
-void CGameUi::drawField(sf::RenderTarget& Target, sf::RenderStates States, const CAiPlayer::CField& Field, CScreenPos Pos) const
+/*void CGameUi::drawField(sf::RenderTarget& Target, sf::RenderStates States, const CAiPlayer::CField& Field, sf::Vector2i Pos) const
 {
 	const auto& Assets = m_Preset->getBasicAssets();
 	for (int i = 0; i < Field.getWidth(); i++)
@@ -165,10 +138,10 @@ void CGameUi::drawField(sf::RenderTarget& Target, sf::RenderStates States, const
 			Target.draw(Spr, States);
 		}
 	}
-}
+}*/
 
-template<typename T>
-void CGameUi::drawShips(sf::RenderTarget & Target, sf::RenderStates States, const std::vector<T>& Ships, CScreenPos Pos) const
+/*template<typename T>
+void CGameUi::drawShips(sf::RenderTarget & Target, sf::RenderStates States, const std::vector<T>& Ships, sf::Vector2i Pos) const
 {
 	auto TileSize = m_Preset->getBasicAssets().m_TileSize;
 	for (const auto p : Ships)
@@ -178,15 +151,11 @@ void CGameUi::drawShips(sf::RenderTarget & Target, sf::RenderStates States, cons
 		if (!m_Preset->getShipAsset(Meta.m_TemplateId))
 			continue;
 		sf::Sprite Spr(s.isDestroyed() ? m_Preset->getShipAsset(Meta.m_TemplateId)->m_TxtDestroyed : m_Preset->getShipAsset(Meta.m_TemplateId)->m_TxtAlive);
-		float Width = Spr.getLocalBounds().width / 2.f, Height = Spr.getLocalBounds().height / 2.f;
-		Spr.setOrigin(TileSize.x/2.f, TileSize.y/2.f);
-		Spr.setPosition(Pos.x + Meta.m_Pos.first*TileSize.x + TileSize.x / 2.f, Pos.y + Meta.m_Pos.second*TileSize.y + TileSize.y / 2.f);
 		Spr.rotate(static_cast<float>(Meta.m_Rotation.degrees()));
-		
-		
+		Spr.setPosition(Spr.getPosition().x - (Spr.getGlobalBounds().left - (Pos.x+Meta.m_Pos.first*TileSize.x)), Spr.getPosition().y - (Spr.getGlobalBounds().top - (Pos.y + Meta.m_Pos.second*TileSize.y)));	
 		Target.draw(Spr, States);
 	}
-}
+}*/
 
 void CGameUi::playSound(const sf::SoundBuffer & Buffer)
 {
@@ -223,4 +192,14 @@ void CGameUi::onEvent(const CGameEvent & Event)
 		playSound(m_Preset->getBasicAssets().m_SndVictory);
 		break;
 	}
+}
+
+void CGameUi::onEvent(IControl * Control, int Id)
+{
+	/*if (m_Designer.getBoard().isReady())
+	{
+		m_PlayerBoard = m_Controller->seat(&m_Player, std::move(m_Designer.getBoard()));
+		m_BuildPhase = false;
+		m_Controller->start();
+	}*/
 }

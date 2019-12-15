@@ -37,6 +37,7 @@ public:
 	virtual bool attack(IPlayer* Attacker, const IPlayer* Victim, int x, int y);
 	virtual void start();
 	virtual void run();
+	bool isInProgress() const;
 
 	void addObserver(IObserver* Observer);
 	void removeObserver(IObserver* Observer);

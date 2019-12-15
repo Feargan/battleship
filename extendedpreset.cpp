@@ -1,8 +1,6 @@
 #include "extendedpreset.h"
 #include "sections.h"
 
-#include <SFML/Graphics.hpp>
-
 CExtendedPreset::CExtendedPreset()
 	: CGamePreset()
 {
@@ -225,19 +223,6 @@ void CExtendedPreset::writeLayout(CSections& Sections, const char * Name, const 
 			LayoutBuffer[i*Width + j] = Layout[{j, i}];
 	LayoutSections.put("L", LayoutBuffer);
 	writeSubsections(Sections, Name, LayoutSections);
-}
-
-std::optional<sf::Vector2i> CExtendedPreset::getTilePos(sf::Vector2i BoardSize, sf::Vector2i TilePxSize, sf::Vector2i BoardPos, sf::Vector2i CursorPos)
-{
-	if (CursorPos.x > BoardPos.x && CursorPos.y > BoardPos.y &
-		CursorPos.x < BoardPos.x + TilePxSize.x * BoardSize.x && CursorPos.y < BoardPos.y + TilePxSize.y * BoardSize.y)
-	{
-		CursorPos -= BoardPos;
-		CursorPos.x /= TilePxSize.x;
-		CursorPos.y /= TilePxSize.y;
-		return CursorPos;
-	}
-	return {};
 }
 
 template<typename T> static std::optional<T> CExtendedPreset::loadResource(CSections& Sections, const char* Name)

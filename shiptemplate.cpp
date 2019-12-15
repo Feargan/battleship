@@ -11,6 +11,11 @@ void CShipTemplate::rotate(CRotation::CDir Dir)
 	m_Layout.rotate(Dir);
 }
 
+void CShipTemplate::setRotation(CRotation Rotation)
+{
+	m_Layout.setRotation(Rotation);
+}
+
 unsigned int CShipTemplate::getId() const
 {
 	return m_Id;

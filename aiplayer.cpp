@@ -11,6 +11,44 @@ CAiPlayer::~CAiPlayer()
 {
 }
 
+CGameBoard CAiPlayer::buildBoard()
+{
+	CGameBoard Board(getController()->getPreset());
+	//CGameBoard::CField HelperField(Board.getField().getWidth(), Board.getField().getHeight());
+	//int Empty;
+
+	for (unsigned int i = 0; i < getController()->getPreset()->numTemplates(); i++)
+	{
+		CShipTemplate Template = *getController()->getPreset()->getTemplate(i);
+		while (Board.remaining(i))
+		{
+			int x = rand() % Board.getField().getWidth();
+			int y = rand() % Board.getField().getHeight();
+			int r = rand() % 4;
+			CRotation Rotation;
+			switch (r)
+			{
+			using CValue = CRotation::CValue;
+			case 0:
+				Rotation.set(CValue::NONE);
+				break;
+			case 1:
+				Rotation.set(CValue::QUARTER);
+				break;
+			case 2:
+				Rotation.set(CValue::HALF);
+				break;
+			case 3:
+				Rotation.set(CValue::THREE_QUARTER);
+				break;
+			}
+			Template.setRotation(Rotation);
+			Board.place(x, y, Template);
+		}
+	}
+	return Board;
+}
+
 #include <iostream>
 #include <cstdlib>
 

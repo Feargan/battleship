@@ -1,8 +1,7 @@
 #pragma once
 #include "interface_control.h"
 
-#include <SFML/Graphics/Font.hpp>
-#include <SFML/Graphics/Texture.hpp>
+#include <SFML/Graphics.hpp>
 
 class CButton : public IControl
 {
@@ -40,6 +39,6 @@ public:
     void update();
 
     virtual void handleInput(sf::Event) override;
-protected:
+
     virtual void draw(sf::RenderTarget& Target, sf::RenderStates states) const override;
 };

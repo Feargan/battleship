@@ -1,14 +1,13 @@
 #include "radiobutton.h"
 #include "sections.h"
 
-#include <SFML/Graphics/Text.hpp>
-#include <SFML/Graphics/Sprite.hpp>
+#include <SFML/Graphics.hpp>
 
 #ifdef _WIN32
 const std::string FONT_PATH = "C:\\WINDOWS\\Fonts\\";
 #endif
 
-bool CRadioButton::CResources::load(const char* Filename)
+/*bool CRadioButton::CResources::load(const char* Filename)
 {
 	CSections Sections;
 	Sections.loadFromFile(Filename);
@@ -26,7 +25,7 @@ bool CRadioButton::CResources::load(const char* Filename)
 		m_FontSize = *FontSize;
 	}
 	return true;
-}
+}*/
 
 CRadioButton::CRadioButton(CPanel* Panel) : IControl(Panel), m_Active(false)
 {
@@ -54,7 +53,7 @@ bool CRadioButton::isActive() const
 	return m_Active;
 }
 
-void CRadioButton::setResources(const CResources & Resources)
+void CRadioButton::setResources(const CButton::CResources & Resources)
 {
 	m_Resources = Resources;
 }
@@ -87,15 +86,17 @@ void CRadioButton::handleInput(sf::Event Event)
 void CRadioButton::draw(sf::RenderTarget & Target, sf::RenderStates states) const
 {
 	sf::Text TitleText(m_Title, m_Resources.m_Font, m_Resources.m_FontSize);
-	TitleText.setPosition(getPosition().left + getPosition().width / 2 - TitleText.getGlobalBounds().width / 2, getPosition().top);
+	TitleText.setPosition(getPosition().left + getPosition().width / 2.f - TitleText.getGlobalBounds().width / 2.f, getPosition().top);
 	sf::Sprite Spr;
 	const sf::Texture* Texture;
-	Spr.setPosition(getPosition().left, getPosition().top);
+	const auto& Pos = getPosition();
+	Spr.setPosition(static_cast<float>(Pos.left), static_cast<float>(Pos.top));
 	if (m_Active)
-		Texture = &m_Resources.m_TxtActive;
+		Texture = &m_Resources.m_TxtPressed;
 	else
-		Texture = &m_Resources.m_TxtInactive;
+		Texture = &m_Resources.m_TxtNormal;
 	Spr.setTexture(*Texture);
+	Spr.setScale(static_cast<float>(Pos.width) / Texture->getSize().x, static_cast<float>(Pos.height) / Texture->getSize().y);
 	//Spr.setScale(getPosition().width / Texture->getSize().x, getPosition().height / Texture->getSize().y);
 	Target.draw(Spr, states);
 	Target.draw(TitleText, states);

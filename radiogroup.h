@@ -3,7 +3,7 @@
 
 #include <unordered_set>
 
-class CRadioGroup : private IControl::CEventListener
+class CRadioGroup : private IControl::IEventListener
 {
 	std::unordered_set<CRadioButton*> m_Controls;
 	CRadioButton* m_LastActive;

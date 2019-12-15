@@ -1,29 +1,26 @@
 #pragma once
 #include "panel.h"
 
-#include <SFML/Graphics/Rect.hpp>
-#include <SFML/Graphics/Drawable.hpp>
-#include <SFML/Window/Event.hpp>
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <SFML/Graphics/RenderStates.hpp>
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
 
 class CPanel;
 
 class IControl : public sf::Drawable
 {
 public:
-	class CEventListener
+	class IEventListener
 	{
 	public:
-		virtual ~CEventListener() {}
+		virtual ~IEventListener() {}
 		virtual void onEvent(IControl* Control, int EventId) {}
 	};
 protected:
 	//sf::Rect<int> m_Pos;
 private:
     CPanel* m_Panel;
-	std::vector<CEventListener*> m_Listeners;
-	sf::Rect<float> m_Pos;
+	std::vector<IEventListener*> m_Listeners;
+	sf::Rect<int> m_Pos;
 public:
     IControl(CPanel* Panel);
     virtual ~IControl();
@@ -34,11 +31,11 @@ public:
 
     CPanel* getPanel(){return m_Panel;}
 
-	void setPosition(const sf::Rect<float>& Pos);
-	const sf::Rect<float>& getPosition() const;
+	void setPosition(const sf::Rect<int>& Pos);
+	const sf::Rect<int>& getPosition() const;
 
-	void addListener(CEventListener* Listener);
-	void removeListener(CEventListener* Listener);
+	void addListener(IEventListener* Listener);
+	void removeListener(IEventListener* Listener);
     virtual void handleInput(sf::Event) = 0;
 
 	virtual void update() {}

@@ -1,12 +1,72 @@
 #include "designerui.h"
+#include "interfaceutils.h"
+#include "tab.h"
 
-#include "dragndropship.h"
-
-#include <SFML/Graphics/Sprite.hpp>
-
-CDesignerUi::CDesignerUi() : m_BoardPos{200, 200}, m_Preset(nullptr), m_CanPlace(false)
+CDesignerUi::CDesignerUi()
 {
-	m_RadioResources.load("button.irc");
+	if (m_Preset.load("preset.bsp") != CExtendedPreset::CState::OK) // preset.bsp
+		throw std::exception("failed to open template preset");
+
+	m_ButtonResources.load("button.irc");
+	//m_RadioResources.load("button.irc");
+
+	m_FieldPos = { 170, 50 };
+
+	CButton* Button;
+	Button = new CButton(&m_Buttons);
+	Button->setResources(m_ButtonResources);
+	Button->setPosition({0, 0, 100, 60});
+	Button->setTitle("New");
+	Button->addListener(this);
+	
+	Button = new CButton(&m_Buttons);
+	Button->setResources(m_ButtonResources);
+	Button->setPosition({ 0, 70, 100, 60 });
+	Button->setTitle("Load");
+	Button->addListener(this);
+
+	Button = new CButton(&m_Buttons);
+	Button->setResources(m_ButtonResources);
+	Button->setPosition({ 0, 150, 100, 60 });
+	Button->setTitle("Save");
+	Button->addListener(this);
+
+	Button = new CButton(&m_Buttons);
+	Button->setResources(m_ButtonResources);
+	Button->setPosition({ 0, 230, 100, 60 });
+	Button->setTitle("Save as");
+	Button->addListener(this);
+
+	CRadioButton* Radio;
+	Radio = new CRadioButton(&m_BrushPanel);
+	Radio->setResources(m_ButtonResources);
+	Radio->setPosition({ 0, 0, 100, 30 });
+	Radio->setTitle("Draw");
+	Radio->addListener(this);
+	m_BrushGroup.add(Radio);
+	Radio->switchOn();
+
+	Radio = new CRadioButton(&m_BrushPanel);
+	Radio->setResources(m_ButtonResources);
+	Radio->setPosition({ 0, 40, 100, 30 });
+	Radio->setTitle("Erase");
+	Radio->addListener(this);
+	m_BrushGroup.add(Radio);
+
+	m_Buttons.setPosition({ 10, 10 });
+	m_Buttons.autoSize();
+	m_BrushPanel.setPosition({ 10, 10 });
+	m_BrushPanel.autoSize();
+
+	CTab* Tab = new CTab(&m_Editor);
+	Tab->setResources(m_ButtonResources);
+	Tab->setPosition({ 10, 10, 300, 200 });
+	Tab->link("File", &m_Buttons);
+	Tab->link("Brush", &m_BrushPanel);
+
+	m_Editor.setArea({ 0, 0, 200, 400 });
+
+	m_EditedField = CGameBoard::CField(5, 5);
 }
 
 
@@ -14,116 +74,48 @@ CDesignerUi::~CDesignerUi()
 {
 }
 
-void CDesignerUi::preparePreset(CExtendedPreset * Preset)
+void CDesignerUi::run()
 {
-	if (!Preset)
-		return;
-	for (unsigned int i = 0; i < Preset->numTemplates(); i++)
-	{
-		CDragNDropShip* Entry = new CDragNDropShip(&m_ShipToolbar);
-		float y = static_cast<float>(i) * 80;
-		Entry->setPosition({ 0, y, 0, 0 });
-		Entry->setTemplate(Preset, i);
-		Entry->addListener(this);
-	}
-	m_Board = CGameBoard(Preset);
-	m_Preset = Preset;
+	//m_BrushPanel.update();
+	//m_Buttons.update();
+	m_Editor.update();
 }
 
 void CDesignerUi::handleInput(sf::Event Event)
 {
-	m_ShipToolbar.handleInput(Event);
+	//m_Buttons.handleInput(Event);
+	//m_BrushPanel.handleInput(Event);
+	m_Editor.handleInput(Event);
 	if (Event.type == sf::Event::MouseMoved)
 	{
-		auto Next = CExtendedPreset::getTilePos({ m_Preset->getBoardSize().first, m_Preset->getBoardSize().second }, m_Preset->getBasicAssets().m_TileSize, m_BoardPos, { Event.mouseMove.x, Event.mouseMove.y });
-		if (m_DraggedTemplate && (Next && !m_CurrentTile) || (Next && m_CurrentTile && *Next != *m_CurrentTile))
-		{
-			m_CanPlace = m_Board.canPlace(Next->x, Next->y, *m_DraggedTemplate);
-		}
-		m_CurrentTile = Next;
-
+		m_CurrentTile = CInterfaceUtils::getTilePos({ m_EditedField.getWidth(), m_EditedField.getHeight() }, m_Preset.getBasicAssets().m_TileSize, m_FieldPos, { Event.mouseMove.x, Event.mouseMove.y });
 	}
-	else if (Event.type == sf::Event::MouseButtonPressed && Event.mouseButton.button == sf::Mouse::Button::Left)
+	else if (Event.type == sf::Event::MouseButtonPressed)
 	{
+		m_CurrentTile = CInterfaceUtils::getTilePos({ m_EditedField.getWidth(), m_EditedField.getHeight() }, m_Preset.getBasicAssets().m_TileSize, m_FieldPos, { Event.mouseButton.x, Event.mouseButton.y });
 		if (m_CurrentTile)
-			m_Board.remove(m_CurrentTile->x, m_CurrentTile->y);
-	}
-	else if (Event.type == sf::Event::KeyPressed && Event.key.code == sf::Keyboard::Key::R)
-	{
-		if (m_DraggedTemplate)
 		{
-			m_DraggedTemplate->rotate(CRotation::CDir::CLOCKWISE);
-			m_Drag->rotate(CRotation::CDir::CLOCKWISE);
-			m_CanPlace = m_Board.canPlace(m_CurrentTile->x, m_CurrentTile->y, *m_DraggedTemplate);
+			if (Event.mouseButton.button == sf::Mouse::Button::Left)
+			{
+				m_EditedField[{m_CurrentTile->x, m_CurrentTile->y}] = CTile::CState::TAKEN;
+			}
+			else if (Event.mouseButton.button == sf::Mouse::Button::Right)
+			{
+				m_EditedField[{m_CurrentTile->x, m_CurrentTile->y}] = CTile();
+			}
 		}
+			//m_Board.remove(m_CurrentTile->x, m_CurrentTile->y);
 	}
-
-}
-
-void CDesignerUi::run()
-{
-	m_ShipToolbar.update();
 }
 
 void CDesignerUi::draw(sf::RenderTarget & Target, sf::RenderStates States) const
 {
-	if (!m_Preset)
-		return;
-	const auto& Field = m_Board.getField();
-	const auto& Assets = m_Preset->getBasicAssets();
-	for (int i = 0; i < Field.getWidth(); i++)
-	{
-		for (int j = 0; j < Field.getHeight(); j++)
-		{
-			sf::Sprite Spr;
-			switch (Field.at(i, j).getState())
-			{
-			case CTile::CState::MISS:
-				Spr = sf::Sprite(Assets.m_TxtTileMiss);
-				break;
-			case CTile::CState::DESTROYED:
-			case CTile::CState::HIT:
-				Spr = sf::Sprite(Assets.m_TxtTileHit);
-				break;
-			case CTile::CState::TAKEN:
-				Spr = sf::Sprite(Assets.m_TxtTileTaken);
-				break;
-			default:
-				Spr = sf::Sprite(Assets.m_TxtTileEmpty);
-			}
-			Spr.setPosition(i*Assets.m_TileSize.x + static_cast<float>(m_BoardPos.x), j*Assets.m_TileSize.y + static_cast<float>(m_BoardPos.y));
-			if (m_CurrentTile && m_CurrentTile->x == i && m_CurrentTile->y == j)
-				Spr.setColor(sf::Color(128, 255, 128));
-			if (m_CurrentTile && m_DraggedTemplate)
-			{
-				const auto& Layout = m_DraggedTemplate->getLayout();
-				int PosX = i - m_CurrentTile->x;
-				int PosY = j - m_CurrentTile->y;
-				if (Layout.checkPoint(PosX, PosY) && Layout.at(PosX, PosY) == 1)
-					m_CanPlace ? Spr.setColor(sf::Color(128, 255, 128)) : Spr.setColor(sf::Color(255, 128, 128));
-			}
-			Target.draw(Spr, States);
-		}
-	}
-	Target.draw(m_ShipToolbar);
+	//Target.draw(m_BrushPanel, States);
+	//Target.draw(m_Buttons, States);
+	Target.draw(m_Editor, States);
+	CInterfaceUtils::drawField(Target, States, m_Preset, m_EditedField, m_FieldPos, m_CurrentTile);
 }
 
-void CDesignerUi::onEvent(IControl * Control, int EventId)
+void CDesignerUi::onEvent(IControl * Control, int Id)
 {
-	if (Control->getPanel() == &m_ShipToolbar)
-	{
-		CDragNDropShip* Drag = static_cast<CDragNDropShip*>(Control);
-		if (EventId == CDragNDrop::CEvent::PICK_UP && Drag->getTemplate())
-		{
-			m_DraggedTemplate = *Drag->getTemplate();
-			m_Drag = Drag;
-		}
-		else if (EventId == CDragNDrop::CEvent::RELEASE)
-		{
-			if(m_CurrentTile)
-				m_Board.place(m_CurrentTile->x, m_CurrentTile->y, *m_DraggedTemplate);
-			m_DraggedTemplate = {};
-			m_Drag->resetRotation();
-		}
-	}
 }

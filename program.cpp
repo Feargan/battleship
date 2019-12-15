@@ -4,6 +4,7 @@
 #include <ctime>
 
 #include "commandui.h"
+#include "boardbuilderui.h"
 #include "designerui.h"
 
 bool CProgram::init()
@@ -39,26 +40,40 @@ void CProgram::run()
 {
     sf::RenderWindow m_Window(sf::VideoMode(m_WindowWidth, m_WindowHeight), "bs", sf::Style::Titlebar | sf::Style::Close);
     m_Window.setFramerateLimit(60);
-	IGameController m_Controller = IGameController(&m_GamePreset);
-	CGameUi GameUi(&m_Controller, &m_GamePreset);
-	CDesignerUi Designer;
-	Designer.preparePreset(&m_GamePreset);
+	IGameController Controller = IGameController(&m_GamePreset);
+	CAiPlayer AiPlayer(&Controller);
+	Controller.seat(&AiPlayer, AiPlayer.buildBoard());
+	CAiPlayer AiPlayer2(&Controller);
+	Controller.seat(&AiPlayer2, AiPlayer.buildBoard());
+	CLocalPlayer Player(&Controller);
+	std::unique_ptr<CGameUi> GameUi;
+	CBoardBuilderUi BuilderUi;
+	BuilderUi.preparePreset(&m_GamePreset); // merge ^
+
+	CDesignerUi DesignerUi;
+	IScreenContext* Screen = &BuilderUi;
+
     while(m_Window.isOpen())
     {
         sf::Event Event;
 		while (m_Window.pollEvent(Event))
 		{
-			//m_Panel.handleInput(Event);
-			//GameUi.handleInput(Event);
-			Designer.handleInput(Event);
+			Screen->handleInput(Event);
 		}
-		Designer.run();
-		/*m_Panel.update();
-		GameUi.run();
-        m_Window.draw(m_Panel);
-		m_Window.draw(GameUi);*/
-		m_Window.clear(sf::Color(255, 255, 255));
-		m_Window.draw(Designer);
+
+		if (Screen == &BuilderUi && BuilderUi.isLockedIn())
+		{
+			auto Board = Controller.seat(&Player, BuilderUi.getBoard());
+			Controller.start();
+			GameUi = std::unique_ptr<CGameUi>(new CGameUi(&Controller, &m_GamePreset, &Player, Board));
+			Screen = GameUi.get();
+		}
+		//Designer.run();
+		//m_Panel.update();
+		Screen->run();
+		m_Window.clear(sf::Color(255, 255, 255, 255));
+		m_Window.draw(*Screen);
+		//m_Window.draw(Designer);
 		m_Window.display();
     }
 }

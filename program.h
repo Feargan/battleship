@@ -1,6 +1,4 @@
-#ifndef PROGRAM_H
-#define PROGRAM_H
-
+#pragma once
 #include "panel.h"
 #include "button.h"
 #include "textbox.h"
@@ -19,8 +17,6 @@ class CProgram
     CPanel m_Panel;
     CTextboxResources m_TextboxResources;
 	CTextbox* m_Textbox_Message;
-
-	CGameUi m_GameUi;
 	CExtendedPreset m_GamePreset;
 public:
     CProgram(){}
@@ -28,5 +24,3 @@ public:
     bool init();
     void run();
 };
-
-#endif // PROGRAM_H

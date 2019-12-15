@@ -15,6 +15,6 @@ public:
 	const CShipTemplate* getTemplate() const;
 
 	virtual void update() override;
-protected:
+
 	virtual void draw(sf::RenderTarget& Target, sf::RenderStates States) const override;
 };

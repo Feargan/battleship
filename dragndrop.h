@@ -2,7 +2,7 @@
 #include "interface_control.h"
 #include "rotation.h"
 
-#include <SFML/Graphics/Texture.hpp>
+#include <SFML/Graphics.hpp>
 
 class CDragNDrop : public IControl
 {

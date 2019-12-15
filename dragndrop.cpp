@@ -1,8 +1,6 @@
 #include "dragndrop.h"
 
-#include <SFML/Graphics/Sprite.hpp>
-
-CDragNDrop::CDragNDrop(CPanel * Panel) : IControl(Panel)
+CDragNDrop::CDragNDrop(CPanel* Panel) : IControl(Panel)
 {
 
 }
@@ -34,7 +32,7 @@ void CDragNDrop::handleInput(sf::Event Event)
 
 void CDragNDrop::autoSize()
 {
-	setPosition({ getPosition().left, getPosition().top, static_cast<float>(m_Image.getSize().x), static_cast<float>(m_Image.getSize().y) });
+	setPosition({ getPosition().left, getPosition().top, static_cast<int>(m_Image.getSize().x), static_cast<int>(m_Image.getSize().y) });
 }
 
 void CDragNDrop::setImage(sf::Texture Image)
@@ -72,14 +70,14 @@ void CDragNDrop::draw(sf::RenderTarget & Target, sf::RenderStates states) const
 {
 	const auto& Pos = getPosition();
 	sf::Sprite Spr(m_Image);
-	Spr.setPosition(Pos.left, Pos.top);
-	Spr.setScale({ Pos.width / Spr.getLocalBounds().width, Pos.height / Spr.getLocalBounds().height });
+	Spr.setPosition(static_cast<float>(Pos.left), static_cast<float>(Pos.top));
+	Spr.setScale({ static_cast<float>(Pos.width) / Spr.getLocalBounds().width, static_cast<float>(Pos.height) / Spr.getLocalBounds().height });
 	Target.draw(Spr);
 	if (m_Held)
 	{
 		Spr.setColor(sf::Color(255, 255, 255, 128));
 		Spr.setPosition(static_cast<float>(m_CursorPos.x), static_cast<float>(m_CursorPos.y));
-		Spr.rotate(m_Rotation.degrees());
+		Spr.rotate(static_cast<float>(m_Rotation.degrees()));
 		Spr.setPosition(Spr.getPosition().x - (Spr.getGlobalBounds().left - getCursorPos().x), Spr.getPosition().y - (Spr.getGlobalBounds().top - getCursorPos().y));
 		Target.draw(Spr);
 	}

@@ -17,7 +17,6 @@ private:
 	using CState = CTile::CState;
 
 	CField m_Field;
-	//std::list<CShip> m_Ships;
 	std::vector<std::shared_ptr<CShip>> m_Ships;
 	std::vector<int> m_ShipCounters;
 
@@ -38,12 +37,13 @@ public:
 	void remove(int x, int y);
 	bool isReady() const;
 	bool destroyed() const;
+	int remaining(unsigned int TemplateId) const;
 
 	CTile::CState attack(int x, int y);
 	bool canAttack(int x, int y);
 
-	const std::vector<std::shared_ptr<CShip>>& getShips() const; // ----v
-	const CField& getField() const; //---> this will be used for UI design
+	const std::vector<std::shared_ptr<CShip>>& getShips() const;
+	const CField& getField() const;
 	const CGamePreset* getPreset() const;
 };
 

@@ -4,11 +4,10 @@
 #include <vector>
 #include <fstream>
 
-#include <SFML/Graphics/Text.hpp>
-#include <SFML/Graphics/Sprite.hpp>
-
 #ifdef _WIN32
 const std::string FONT_PATH = "C:\\WINDOWS\\Fonts\\";
+#elif __linux__
+const std::string FONT_PATH = "//usr/share/fonts/";
 #endif
 
 bool CButton::CResources::load(const char* Filename)
@@ -69,7 +68,7 @@ void CButton::handleInput(sf::Event Event)
 {
     if(Event.type == sf::Event::MouseMoved)
     {
-        if(getPosition().contains(static_cast<float>(Event.mouseMove.x), static_cast<float>(Event.mouseMove.y)))
+        if(getPosition().contains(Event.mouseMove.x, Event.mouseMove.y))
             m_Hover = true;
         else
             m_Hover = false;
@@ -82,7 +81,7 @@ void CButton::handleInput(sf::Event Event)
     else if(Event.type == sf::Event::MouseButtonReleased && Event.mouseButton.button == sf::Mouse::Button::Left && m_Held)
     {
         m_Held = false;
-		if (getPosition().contains(static_cast<float>(Event.mouseButton.x), static_cast<float>(Event.mouseButton.y)))
+		if (getPosition().contains(Event.mouseButton.x, Event.mouseButton.y))
 			event(Event::PRESSED);
     }
 }
@@ -91,10 +90,10 @@ void CButton::draw(sf::RenderTarget& Target, sf::RenderStates states) const
 {
 	const auto& Pos = getPosition();
 	sf::Text TitleText(m_Title, m_Resources.m_Font, m_Resources.m_FontSize);
-	TitleText.setPosition(Pos.left + Pos.width / 2 - TitleText.getGlobalBounds().width / 2, Pos.top);
+	TitleText.setPosition(Pos.left + Pos.width / 2.f - TitleText.getGlobalBounds().width / 2.f, static_cast<float>(Pos.top));
 	sf::Sprite Spr;
 	const sf::Texture* Texture;
-	Spr.setPosition(Pos.left, Pos.top);
+	Spr.setPosition(static_cast<float>(Pos.left), static_cast<float>(Pos.top));
 	if (m_Held && m_Hover)
 		Texture = &m_Resources.m_TxtPressed;
 	else if (!m_Held && m_Hover)
@@ -102,7 +101,7 @@ void CButton::draw(sf::RenderTarget& Target, sf::RenderStates states) const
 	else
 		Texture = &m_Resources.m_TxtNormal;
 	Spr.setTexture(*Texture);
-	Spr.setScale(Pos.width / Texture->getSize().x, Pos.height / Texture->getSize().y);
+	Spr.setScale(static_cast<float>(Pos.width) / Texture->getSize().x, static_cast<float>(Pos.height) / Texture->getSize().y);
 	Target.draw(Spr, states);
 	Target.draw(TitleText, states);
 }

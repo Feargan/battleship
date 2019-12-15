@@ -1,7 +1,5 @@
 #include "dragndropship.h"
 
-#include <SFML/Graphics/Sprite.hpp>
-
 CDragNDropShip::CDragNDropShip(CPanel* Panel) : CDragNDrop(Panel), m_Template(nullptr)
 {
 }

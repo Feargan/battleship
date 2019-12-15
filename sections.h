@@ -5,6 +5,7 @@
 #include <istream>
 #include <ostream>
 #include <optional>
+#include <functional>
 
 class CSections
 {
@@ -32,7 +33,7 @@ public:
 	void saveToBuffer(std::vector<char>& Buffer) const;
 
 	const std::vector<char>* get(const char* Section) const;
-	template<typename T, typename std::enable_if<std::is_unsigned<T>::value>::type* = nullptr> std::optional<T>  getInt(const char* Section) const
+	template<typename T, typename std::enable_if<std::is_unsigned<T>::value>::type* = nullptr> std::optional<T> getInt(const char* Section) const
 	{
 		auto Vec = get(Section);
 		if (!Vec || Vec->size() < sizeof(T))
@@ -69,6 +70,10 @@ public:
 		rawWrite(Uvalue, &Buffer[0]);
 		put(Section, Buffer);
 	}
+
+	void remove(const char* Section);
+
+	void list(std::function<void(const std::string&, int)> Fn);
 
 	template<typename T> static void rawRead(T& Output, const char* Buffer)
 	{

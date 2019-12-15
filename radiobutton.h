@@ -1,9 +1,9 @@
 #pragma once
 
 #include "interface_control.h"
+#include "button.h"
 
-#include <SFML/Graphics/Texture.hpp>
-#include <SFML/Graphics/Font.hpp>
+#include <SFML/Graphics.hpp>
 
 class CRadioButton : public IControl
 {
@@ -14,7 +14,7 @@ public:
 		SWITCH_ON,
 		SWITCH_OFF,
 	};
-	struct CResources
+	/*struct CResources
 	{
 		sf::Texture m_TxtInactive;
 		sf::Texture m_TxtActive;
@@ -22,11 +22,11 @@ public:
 		int m_FontSize;
 
 		bool load(const char* Filename);
-	};
+	};*/
 private:
 	bool m_Active;
 	std::string m_Title;
-	CResources m_Resources;
+	CButton::CResources m_Resources;
 public:
 	CRadioButton(CPanel* Panel);
 	virtual ~CRadioButton();
@@ -35,7 +35,7 @@ public:
 	void switchOff();
 	bool isActive() const;
 
-	void setResources(const CResources& Resources);
+	void setResources(const CButton::CResources& Resources);
 
 	void setTitle(const std::string& Text);
 	const std::string& getTitle() const;

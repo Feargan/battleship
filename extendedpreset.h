@@ -3,8 +3,8 @@
 #include "gamepreset.h"
 #include "sections.h"
 
-#include <SFML/Graphics/Texture.hpp>
-#include <SFML/Audio/SoundBuffer.hpp>
+#include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 #include <vector>
 #include <cinttypes>
@@ -58,7 +58,7 @@ public:
 	template<typename T> static std::optional<T> loadResource(CSections& Sections, const char* Name);
 	template<typename T> static void writeResource(CSections& Sections, const char* Name, const T& Resource, const char* Format);
 
-	static std::optional<sf::Vector2i> getTilePos(sf::Vector2i BoardSize, sf::Vector2i TilePxSize, sf::Vector2i BoardPos, sf::Vector2i CursorPos);
+	//static void drawField(sf::RenderTarget& Target, const CExtendedPreset& Preset, const CGameBoard::CField& Field, sf::Vector2i Pos, std::optional<sf::Vector2i> TilePos);
 	//template<typename T> static void getAndSetInt(CSections& Sections, const char* Name, T& Integer);
 	// template<typename T> static void getAndSetResource(CSections& Sections, const char* Name, T& Resource);
 	/*static std::optional<sf::Image> readImage(CSections& Sections, const char* Name);

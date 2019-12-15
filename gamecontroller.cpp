@@ -38,14 +38,8 @@ bool IGameController::attack(IPlayer * Attacker, const IPlayer* Victim, int x, i
 	if (State == CTile::CState::MISS)
 	{
 		m_Victims.erase(VictimIt);
-		if(!m_Victims.size())
-		{
-			m_Queue.pop();
-			m_Queue.push(Attacker);
-			prepareVictims();
-		}
 	}
-	if (State == CTile::CState::DESTROYED)
+	else if (State == CTile::CState::DESTROYED)
 	{
 		CGameEvent DestroyEvent;
 		DestroyEvent.m_Type = CGameEvent::CType::SHIP_DESTROYED;
@@ -62,6 +56,14 @@ bool IGameController::attack(IPlayer * Attacker, const IPlayer* Victim, int x, i
 			notifyObservers(LoseEvent);
 		}
 	}
+	if (!m_Victims.size())
+	{
+		m_Queue.pop();
+		m_Queue.push(Attacker);
+		while (m_Players[m_Queue.front()].destroyed())
+			m_Queue.pop();
+		prepareVictims();
+	}
 	return true;
 }
 
@@ -77,8 +79,17 @@ void IGameController::start()
 
 void IGameController::run()
 {
-	if(m_Queue.size() && m_Victims.size())
+	if (m_Queue.size() && m_Victims.size())
+	{
+		//while (m_Players[m_Queue.front()].destroyed())
+		//	m_Queue.pop();
 		m_Queue.front()->play();
+	}
+}
+
+bool IGameController::isInProgress() const
+{
+	return m_Victims.size() > 0;
 }
 
 const IPlayer * IGameController::whoseTurn() const
@@ -114,7 +125,6 @@ void IGameController::removeObserver(IObserver * Observer)
 
 std::vector<const IPlayer*> IGameController::getPlayers() const
 {
-	// TEMPORARILY
 	std::vector<const IPlayer*> v;
 	for (auto &p : m_Players)
 		v.push_back(p.first);

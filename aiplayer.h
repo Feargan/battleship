@@ -51,9 +51,11 @@ public:
 	CAiPlayer(IGameController* Controller);
 	virtual ~CAiPlayer();
 
+	CGameBoard buildBoard();
+
 	virtual void play() override;
 
-	const CField* getEnemyField(const IPlayer* Player) const;
+	const CField* getEnemyField(const IPlayer* Player) const; //
 protected:
 	virtual void onEvent(const CGameEvent& Event) override;
 private:

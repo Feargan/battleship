@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-class : private IControl::CEventListener
+class : private IControl::IEventListener
 {
 	CButton::CResources m_ButtonResources;
 public:

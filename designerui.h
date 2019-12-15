@@ -1,40 +1,44 @@
 #pragma once
-
-#include "entryship.h"
+#include "screencontext.h"
 #include "extendedpreset.h"
+#include "panel.h"
+#include "interface_control.h"
+#include "button.h"
+#include "radiobutton.h"
 #include "radiogroup.h"
 #include "gameboard.h"
-#include "dragndropship.h"
 
-#include <vector>
-#include <memory>
-#include <optional>
-
-class CDesignerUi : public sf::Drawable, private IControl::CEventListener // IScreenContext
+class CDesignerUi : public IScreenContext, private IControl::IEventListener
 {
-	using CPos = sf::Vector2i;
-	std::vector<std::unique_ptr<CEntryShip>> m_Entries;
-	CPanel m_ShipToolbar;
-	CRadioButton::CResources m_RadioResources;
-	CRadioGroup m_RadioGroup;
-	CGameBoard m_Board;
-	CPos m_BoardPos;
-	std::optional<CPos> m_CurrentTile;
-	std::optional<CShipTemplate> m_DraggedTemplate;
-	bool m_CanPlace;
-	CExtendedPreset* m_Preset;
-	CDragNDropShip* m_Drag;
+	CExtendedPreset m_Preset;
+	CButton::CResources m_ButtonResources;
+	//CRadioButton::CResources m_RadioResources;
+	CPanel m_Buttons;
+	CPanel m_BrushPanel;
+	CPanel m_Editor;
+	CRadioGroup m_BrushGroup;
+	CGameBoard::CField m_EditedField;
+	sf::Vector2i m_FieldPos;
+	std::optional<sf::Vector2i> m_CurrentTile;
 public:
 	CDesignerUi();
-	~CDesignerUi();
+	virtual ~CDesignerUi();
 
-	void preparePreset(CExtendedPreset* Preset);
-
-	void handleInput(sf::Event Event);
-	void run();
+	virtual void run() override;
+	virtual void handleInput(sf::Event Event) override;
 
 	virtual void draw(sf::RenderTarget& Target, sf::RenderStates states) const override;
+private:
+	virtual void onEvent(IControl* Control, int Id) override;
 
-	virtual void onEvent(IControl* Control, int EventId) override;
+	void makeTxtEditPanel(CPanel& Panel, sf::Texture* EditedTxt);
+	void makeSndEditPanel(CPanel& Panel, sf::SoundBuffer* EditedSnd);
+	/*
+	template textures edition:
+	in the same tab with field
+	change, rotate, slidebars?: posx, posy, sizex, sizey, 
+	checkbox: show on the field;
+	grouped radiobutton?: alive, destroyed
+	*/
 };
 

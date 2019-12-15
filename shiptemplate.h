@@ -20,6 +20,7 @@ public:
 	CShipTemplate(unsigned int Id, const CShipLayout& Layout, const std::shared_ptr<void>& External, const CGamePreset* Preset = nullptr);
 
 	void rotate(CRotation::CDir Dir);
+	void setRotation(CRotation Rotation);
 
 	unsigned int getId() const;
 	const CShipLayout& getLayout() const;

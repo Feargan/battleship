@@ -75,6 +75,17 @@ void CSections::put(const char * Section, const std::vector<char>& Buffer)
 	m_Sections.emplace(std::string(Section), Buffer);
 }
 
+void CSections::remove(const char * Section)
+{
+	m_Sections.erase(Section);
+}
+
+void CSections::list(std::function<void(const std::string&, int)> Fn)
+{
+	for (auto& p : m_Sections)
+		Fn(p.first, p.second.size());
+}
+
 void CSections::createFromStream(std::istream& Input)
 {
 	m_Sections.clear();

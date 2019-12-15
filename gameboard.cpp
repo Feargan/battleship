@@ -66,8 +66,19 @@ bool CGameBoard::canPlace(int x, int y, const CShipTemplate& Template) const
 		return false;
 	for (int i = 0; i < Layout.getWidth(); i++)
 		for (int j = 0; j < Layout.getHeight(); j++)
-			if (m_Field.at(i+x, j+y).getState() != CState::EMPTY)
-				return false;
+			if (Layout.at(i, j) == 1)
+			{
+				for (int m = -1; m <= 1; m++)
+				{
+					for (int n = -1; n <= 1; n++)
+					{
+						if (!m_Field.checkPoint(i + m + x, j + n + y))
+							continue;
+						if (m_Field.at(i + m + x, j + n + y).getState() != CState::EMPTY)
+							return false;
+					}
+				}
+			}
 	return true;
 }
 
@@ -93,8 +104,6 @@ bool CGameBoard::place(int x, int y, const CShipTemplate& Template)
 	return true;
 }
 
-#include <iostream>
-
 void CGameBoard::remove(int x, int y)
 {
 	if (!m_Field.checkPoint(x, y))
@@ -110,7 +119,6 @@ void CGameBoard::remove(int x, int y)
 			return false;
 		}
 	);
-	std::cout << Owner->getMeta().m_TemplateId;
 	m_ShipCounters[Owner->getMeta().m_TemplateId]--;
 	m_Ships.erase(std::remove_if(m_Ships.begin(), m_Ships.end(),
 		[Owner](const std::shared_ptr<CShip>& s) -> bool
@@ -141,11 +149,13 @@ bool CGameBoard::destroyed() const
 	return true;
 }
 
+int CGameBoard::remaining(unsigned int TemplateId) const
+{
+	return m_Preset->getShipAmount(TemplateId)-m_ShipCounters[TemplateId];
+}
+
 CTile::CState CGameBoard::attack(int x, int y)
 {
-	//auto& Tile = m_Field.at(x, y);
-	//Tile.attack();
-	//return Tile.getState();
 	if (!m_Field.checkPoint(x, y))
 		return CState::NO_ATTACK;
 	return m_Field.at(x, y).attack();
@@ -154,7 +164,7 @@ CTile::CState CGameBoard::attack(int x, int y)
 bool CGameBoard::canAttack(int x, int y)
 {
 	auto State = m_Field.at(x, y).getState();
-	return !(State == CState::HIT || State == CState::MISS || State == CState::DESTROYED);
+	return !(!m_Field.checkPoint(x,y) || State == CState::HIT || State == CState::MISS || State == CState::DESTROYED);
 }
 
 const std::vector<std::shared_ptr<CShip>>& CGameBoard::getShips() const
