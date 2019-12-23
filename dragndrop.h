@@ -33,7 +33,7 @@ public:
 	const sf::Texture& getImage() const;
 	
 	virtual void handleInput(sf::Event Event) override;
-
+protected:
 	virtual void draw(sf::RenderTarget& Target, sf::RenderStates states) const override;
 };
 

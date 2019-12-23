@@ -51,6 +51,7 @@ public:
 	void putTemplate(const CShipLayout & Layout, const std::shared_ptr<CShipAsset>& Asset, int Amount);
 	const CShipAsset* getShipAsset(unsigned int TemplateId) const;
 	const CBasicAssets& getBasicAssets() const;
+	CBasicAssets& getBasicAssets();
 
 	static void writeSubsections(CSections& MainSections, const char* Name, const CSections& Subsections);
 	static std::optional<CShipLayout> readLayout(CSections& Sections, const char* Name);

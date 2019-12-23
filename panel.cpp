@@ -131,8 +131,8 @@ void CPanel::draw(sf::RenderTarget& Target, sf::RenderStates States) const
 
 void CPanel::normalize(sf::Event & Event) const
 {
-	int xdif = static_cast<int>(m_Area.left);
-	int ydif = static_cast<int>(m_Area.top);
+	int xdif = m_Area.left;
+	int ydif = m_Area.top;
 	switch (Event.type)
 	{
 	case sf::Event::MouseButtonPressed:

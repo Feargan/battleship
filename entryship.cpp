@@ -39,7 +39,7 @@ void CEntryShip::draw(sf::RenderTarget & Target, sf::RenderStates States) const
 	auto Pos = getPosition();
 	CRadioButton::draw(Target, States);
 	sf::Sprite Spr(static_cast<const CExtendedPreset::CShipAsset*>(m_Template->getExternal().get())->m_TxtAlive); //!
-	Spr.setPosition(Pos.left, Pos.top);
+	Spr.setPosition(static_cast<float>(Pos.left), static_cast<float>(Pos.top));
 	auto SprPos = Spr.getLocalBounds();
 	if (SprPos.width > Pos.width || SprPos.height > Pos.height)
 	{

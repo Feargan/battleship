@@ -16,7 +16,7 @@ public:
 
 		bool load(const char* Filename);
 	};
-	enum Event
+	enum CEvent
 	{
 		PRESSED=1,
 		//HOVER,
@@ -39,6 +39,6 @@ public:
     void update();
 
     virtual void handleInput(sf::Event) override;
-
-    virtual void draw(sf::RenderTarget& Target, sf::RenderStates states) const override;
+protected:
+    virtual void draw(sf::RenderTarget& Target, sf::RenderStates States) const override;
 };

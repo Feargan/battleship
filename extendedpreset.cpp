@@ -185,6 +185,11 @@ const CExtendedPreset::CBasicAssets & CExtendedPreset::getBasicAssets() const
 	return m_Assets;
 }
 
+CExtendedPreset::CBasicAssets & CExtendedPreset::getBasicAssets()
+{
+	return m_Assets;
+}
+
 void CExtendedPreset::writeSubsections(CSections & MainSections, const char * Name, const CSections & Subsections)
 {
 	std::vector<char> SectionBuffer;

@@ -25,6 +25,12 @@ CGameUi::CGameUi(IGameController* Controller, CExtendedPreset* Preset, CLocalPla
 		if (p != m_Player)
 			m_Enemies.push_back(p);
 	}
+
+	// cut ---v
+	m_VictoryInfo.setPosition(200, 500);
+	m_Font.loadFromFile("arial.ttf");
+	m_VictoryInfo.setFont(m_Font);
+	m_VictoryInfo.setFillColor(sf::Color());
 }
 
 
@@ -184,13 +190,18 @@ void CGameUi::onEvent(const CGameEvent & Event)
 		break;
 	}
 	case CType::PLAYER_LOST:
-		m_VictoryInfo.setPosition(200, 500);
-		m_Font.loadFromFile("arial.ttf");
-		m_VictoryInfo.setFont(m_Font);
-		m_VictoryInfo.setFillColor(sf::Color());
-		m_VictoryInfo.setString("przegral XD");
+		if (Event.m_PlayerLostEvent.m_Loser != m_Player)
+			break;
+		
+		m_VictoryInfo.setString("przegra³eœ XD");
 		playSound(m_Preset->getBasicAssets().m_SndVictory);
 		break;
+	case CType::GAME_FINISHED:
+		if (Event.m_GameFinishedEvent.m_Winner == m_Player)
+		{
+			m_VictoryInfo.setString("wygra³eœ");
+			playSound(m_Preset->getBasicAssets().m_SndVictory);
+		}
 	}
 }
 

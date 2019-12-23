@@ -82,7 +82,7 @@ void CButton::handleInput(sf::Event Event)
     {
         m_Held = false;
 		if (getPosition().contains(Event.mouseButton.x, Event.mouseButton.y))
-			event(Event::PRESSED);
+			event(CEvent::PRESSED);
     }
 }
 

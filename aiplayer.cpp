@@ -63,7 +63,7 @@ void CAiPlayer::play()
 	if (!Targets.size())
 	{
 		std::cout << Context.m_Empty;
-		int Index = rand() % Context.m_Empty;
+		int Index = rand() % Context.m_Empty+1;
 		int i;
 		for (i = 0; Index > 0; i++)
 		{

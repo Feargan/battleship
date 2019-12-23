@@ -12,8 +12,13 @@ public:
 	class IEventListener
 	{
 	public:
+		IEventListener() {}
 		virtual ~IEventListener() {}
 		virtual void onEvent(IControl* Control, int EventId) {}
+		IEventListener(const IEventListener&) = delete;
+		IEventListener& operator=(const IEventListener& r) = delete;
+		IEventListener(IEventListener&& r) = delete;
+		IEventListener& operator=(IEventListener&& r) = delete;
 	};
 protected:
 	//sf::Rect<int> m_Pos;
@@ -39,7 +44,7 @@ public:
     virtual void handleInput(sf::Event) = 0;
 
 	virtual void update() {}
-    virtual void draw(sf::RenderTarget& Target, sf::RenderStates states) const = 0;
 protected:
+	virtual void draw(sf::RenderTarget& Target, sf::RenderStates states) const = 0;
 	void event(int eventId);
 };

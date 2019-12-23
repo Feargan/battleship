@@ -41,7 +41,7 @@ public:
 private:
 	virtual void onEvent(IControl* Control, int eventId) override
 	{
-		if (eventId != CButton::Event::PRESSED)
+		if (eventId != CButton::CEvent::PRESSED)
 			return;
 
 		if (Control == m_ButtonNico)

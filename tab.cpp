@@ -19,7 +19,7 @@ void CTab::link(const std::string & TabName, CPanel * Panel)
 	Button->setTitle(TabName);
 	Button->addListener(this);
 	m_TabButtons.autoSize();
-	Panel->setPosition({ Pos.left, Pos.top + 20 });
+	Panel->setPosition({ Pos.left - Panel->getPosition().x , Pos.top + 20 - Panel->getPosition().y });
 	m_Panels[Button] = Panel;
 }
 

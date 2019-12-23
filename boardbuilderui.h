@@ -37,9 +37,9 @@ public:
 
 	virtual void handleInput(sf::Event Event) override;
 	virtual void run() override;
-
+protected:
 	virtual void draw(sf::RenderTarget& Target, sf::RenderStates states) const override;
-
+private:
 	virtual void onEvent(IControl* Control, int EventId) override;
 };
 

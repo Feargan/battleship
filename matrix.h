@@ -165,6 +165,16 @@ public:
 				if (pred(m_Array[i][j]))
 					m_Array[i][j] = T(v);
 	}
+	void resize(int x, int y, const T& d = T())
+	{
+		CMatrix m(x, y);
+		m.fill(d);
+		m.setRotation(getRotation());
+		for (int i = 0; i < m.getWidth() && i < getWidth(); i++)
+			for (int j = 0; j < m.getHeight() && j < getHeight(); j++)
+				m[{i, j}] = this->operator[]({ i,j });
+		std::swap(*this, m);
+	}
 	/*void fill(const T& v)
 	{
 		fill_if(v, [](const T& v) -> bool { return true; });

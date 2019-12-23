@@ -75,18 +75,18 @@ void CRadioButton::handleInput(sf::Event Event)
 	{
 		switchOn();
 	}
-	/*else if (Event.type == sf::Event::MouseButtonReleased && Event.mouseButton.button == sf::Mouse::Button::Left && m_Held)
+	/*else if (CEvent.type == sf::CEvent::MouseButtonReleased && CEvent.mouseButton.button == sf::Mouse::Button::Left && m_Held)
 	{
 		m_Held = false;
-		if (getPosition().contains(static_cast<float>(Event.mouseMove.x), static_cast<float>(Event.mouseMove.y)))
-			event(Event::PRESSED);
+		if (getPosition().contains(static_cast<float>(CEvent.mouseMove.x), static_cast<float>(CEvent.mouseMove.y)))
+			event(CEvent::PRESSED);
 	}*/
 }
 
 void CRadioButton::draw(sf::RenderTarget & Target, sf::RenderStates states) const
 {
 	sf::Text TitleText(m_Title, m_Resources.m_Font, m_Resources.m_FontSize);
-	TitleText.setPosition(getPosition().left + getPosition().width / 2.f - TitleText.getGlobalBounds().width / 2.f, getPosition().top);
+	TitleText.setPosition(getPosition().left + getPosition().width / 2.f - TitleText.getGlobalBounds().width / 2.f, static_cast<float>(getPosition().top));
 	sf::Sprite Spr;
 	const sf::Texture* Texture;
 	const auto& Pos = getPosition();

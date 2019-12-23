@@ -39,7 +39,7 @@ public:
 
 	virtual void run() override;
 	virtual void handleInput(sf::Event Event) override;
-
+protected:
 	virtual void draw(sf::RenderTarget& Target, sf::RenderStates states) const override;
 private:
 	virtual void onEvent(const CGameEvent& Event) override;
