@@ -9,20 +9,21 @@ class CGamePreset
 public:
 	using CSize = std::pair<int, int>;
 private:
-	std::vector<std::pair<CShipTemplate, int>> m_Templates;
+	std::vector<int> m_Sizes;
 	CSize m_BoardSize;
 public:
 	CGamePreset();
 	~CGamePreset();
-
-	void setShipAmount(unsigned int TemplateId, int Amount);
-	int getShipAmount(unsigned int TemplateId) const;
 	
 	void setBoardSize(CSize Size);
 	CSize getBoardSize() const;
 
-	void putTemplate(const CShipLayout& Layout, const std::shared_ptr<void>& External, int Amount);
-	const CShipTemplate* getTemplate(unsigned int TemplateId) const;
-	unsigned int numTemplates() const;
+	void setMaxShipSize(int Max);
+	int getMaxShipSize() const;
+	void setShipAmount(int Size, int Amount);
+	int getShipAmount(int Size) const;
+
+	float indicator() const;
+	float successChance() const;
 };
 

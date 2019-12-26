@@ -51,7 +51,7 @@ public:
 	CAiPlayer(IGameController* Controller);
 	virtual ~CAiPlayer();
 
-	CGameBoard buildBoard();
+	//CGameBoard buildBoard();
 
 	virtual void play() override;
 

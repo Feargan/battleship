@@ -102,15 +102,19 @@ const CGameBoard * IGameController::seat(IPlayer * Player, const CGameBoard & Bo
 	if (!canSeat(Player, Board))
 		return nullptr;
 	addObserver(Player);
-	return &(m_Players.emplace(Player, Board)).first->second;
+	auto& Emplaced = (m_Players.emplace(Player, Board)).first->second;
+	Emplaced.cleanup();
+	return &Emplaced;
 }
 
-const CGameBoard * IGameController::seat(IPlayer* Player, CGameBoard&& Board)
+const CGameBoard * IGameController::seat(IPlayer* Player, CGameBoard&& Board) // probably will get removed
 {
 	if (!canSeat(Player, Board))
 		return nullptr;
 	addObserver(Player);
-	return &(m_Players.emplace(Player, std::move(Board))).first->second;
+	auto& Emplaced = (m_Players.emplace(Player, Board)).first->second;
+	Emplaced.cleanup();
+	return &Emplaced;
 }
 
 void IGameController::addObserver(IObserver * Observer)

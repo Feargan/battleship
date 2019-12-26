@@ -14,7 +14,7 @@ public:
 	public:
 		IEventListener() {}
 		virtual ~IEventListener() {}
-		virtual void onEvent(IControl* Control, int EventId) {}
+		virtual void onEvent(IControl* Control, int EventId) = 0;
 		IEventListener(const IEventListener&) = delete;
 		IEventListener& operator=(const IEventListener& r) = delete;
 		IEventListener(IEventListener&& r) = delete;

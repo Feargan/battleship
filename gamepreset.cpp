@@ -1,6 +1,7 @@
 #include "gamepreset.h"
 #include "gameboard.h"
 
+#include <cmath>
 
 CGamePreset::CGamePreset()
 {
@@ -9,19 +10,6 @@ CGamePreset::CGamePreset()
 
 CGamePreset::~CGamePreset()
 {
-}
-
-void CGamePreset::setShipAmount(unsigned int TemplateId, int Amount)
-{
-	if(TemplateId < numTemplates())
-		m_Templates[TemplateId].second = Amount;
-}
-
-int CGamePreset::getShipAmount(unsigned int TemplateId) const
-{
-	if (TemplateId >= numTemplates())
-		return 0;
-	return m_Templates[TemplateId].second;
 }
 
 void CGamePreset::setBoardSize(CSize Size)
@@ -34,19 +22,50 @@ CGamePreset::CSize CGamePreset::getBoardSize() const
 	return m_BoardSize;
 }
 
-void CGamePreset::putTemplate(const CShipLayout & Layout, const std::shared_ptr<void>& External, int Amount)
+void CGamePreset::setMaxShipSize(int Max)
 {
-	m_Templates.emplace_back(CShipTemplate(m_Templates.size(), Layout, External, this), Amount);
+	if(Max >= 0)
+		m_Sizes.resize(Max, 1);
 }
 
-const CShipTemplate* CGamePreset::getTemplate(unsigned int TemplateId) const
+int CGamePreset::getMaxShipSize() const
 {
-	if(TemplateId >= numTemplates())
-		return nullptr;
-	return &m_Templates[TemplateId].first;
+	return m_Sizes.size();
 }
 
-unsigned int CGamePreset::numTemplates() const
+void CGamePreset::setShipAmount(int Size, int Amount)
 {
-	return m_Templates.size();
+	int i = Size - 1;
+	if (i >= 0 && i < static_cast<int>(m_Sizes.size()))
+		m_Sizes[i] = Amount;
 }
+
+int CGamePreset::getShipAmount(int Size) const
+{
+	int i = Size - 1;
+	if (i >= 0 && i < static_cast<int>(m_Sizes.size()))
+		return m_Sizes[i];
+	return 0;
+}
+
+float CGamePreset::indicator() const
+{
+	int Loose = 0, Strict = 0;
+	for (int i = 1; i<=static_cast<int>(m_Sizes.size()); i++)
+	{
+		Loose += ((i + 2) * 3)*m_Sizes[i-1];
+		Strict += ((i + 1) * 2)*m_Sizes[i-1];
+	}
+	int BoardArea = m_BoardSize.first*m_BoardSize.second;
+	if (Loose < BoardArea)
+		return std::numeric_limits<float>::infinity();
+	return static_cast<float>(BoardArea - Strict) / BoardArea;//Strict > BoardArea ? 0.f : static_cast<float>(BoardArea-Strict) / BoardArea;
+}
+
+float CGamePreset::successChance() const
+{
+	static constexpr float Mean = 0.088101f;
+	static constexpr float StdDev = 0.067701f;
+	return 0.5f*(1+std::erf((indicator()-Mean)/(StdDev*std::sqrt(2))));
+}
+

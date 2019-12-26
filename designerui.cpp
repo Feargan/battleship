@@ -5,7 +5,7 @@
 
 CDesignerUi::CDesignerUi()
 {
-	if (m_Preset.load("preset.bsp") != CExtendedPreset::CState::OK) // preset.bsp
+	if (!m_Preset.load("preset.bsp")) // preset.bsp
 		throw std::exception("failed to open template preset");
 
 	m_ButtonResources.load("button.irc");

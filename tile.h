@@ -7,20 +7,24 @@ class CShip;
 class CTile
 {
 public:
-	enum CState
+	enum class CState
 	{
-		NO_ATTACK = -1,
-		EMPTY = 0,
-		TAKEN,
+		NO_ATTACK,
+
+		EMPTY,
 		MISS,
 		HIT,
 		DESTROYED,
+
+		TAKEN,
+		RESERVED,
+		VITRIFIED,
 	};
 private:
 	std::shared_ptr<CShip> m_Owner;
 	CState m_State;
 public:
-	CTile(CState State = EMPTY);
+	CTile(CState State = CState::EMPTY);
 	CTile(const std::shared_ptr<CShip>& Owner);
 
 	~CTile();

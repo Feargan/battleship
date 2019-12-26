@@ -4,8 +4,8 @@
 #include "extendedpreset.h"
 #include "localplayer.h"
 #include "aiplayer.h"
-#include "boardbuilderui.h"
 #include "screencontext.h"
+#include "interface_control.h"
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>

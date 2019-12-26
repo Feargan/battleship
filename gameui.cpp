@@ -78,90 +78,15 @@ void CGameUi::draw(sf::RenderTarget & Target, sf::RenderStates States) const
 	// if m_Controller has startd
 	// continue
 	CInterfaceUtils::drawField(Target, States, *m_Preset, m_PlayerBoard->getField(), m_PlayerBoardPos, {});
-	CInterfaceUtils::drawShips(Target, States, *m_Preset, m_PlayerBoard->getShips(), m_PlayerBoardPos);
+	//CInterfaceUtils::drawShips(Target, States, *m_Preset, m_PlayerBoard->getShips(), m_PlayerBoardPos);
 	for (unsigned i = 0; i < m_Enemies.size(); i++)
 	{
 		CInterfaceUtils::drawField(Target, States, *m_Preset, m_Player->getEnemyField(m_Enemies[i])->m_Field, m_PlayerHelperPos + sf::Vector2i(i * 300, 0), m_Enemies[i] == m_CurrentEnemy ? m_CurrentTile : std::optional<sf::Vector2i>());
-		CInterfaceUtils::drawShips(Target, States, *m_Preset, m_Player->getEnemyField(m_Enemies[i])->m_DestroyedShips, m_PlayerHelperPos + sf::Vector2i(i * 300, 0));
+		//CInterfaceUtils::drawShips(Target, States, *m_Preset, m_Player->getEnemyField(m_Enemies[i])->m_DestroyedShips, m_PlayerHelperPos + sf::Vector2i(i * 300, 0));
 	}
 
 	Target.draw(m_VictoryInfo);
 }
-
-/*void CGameUi::drawField(sf::RenderTarget& Target, sf::RenderStates States, const CGameBoard::CField& Field, sf::Vector2i Pos) const
-{
-	const auto& Assets = m_Preset->getBasicAssets();
-	for (int i = 0; i < Field.getWidth(); i++)
-	{
-		for (int j = 0; j < Field.getHeight(); j++)
-		{
-			sf::Sprite Spr;
-			switch (Field.at(i, j).getState())
-			{
-			case CTile::CState::MISS:
-				Spr = sf::Sprite(Assets.m_TxtTileMiss);
-				break;
-			case CTile::CState::DESTROYED:
-			case CTile::CState::HIT:
-				Spr = sf::Sprite(Assets.m_TxtTileHit);
-				break;
-			case CTile::CState::TAKEN:
-				Spr = sf::Sprite(Assets.m_TxtTileTaken);
-				break;
-			default:
-				Spr = sf::Sprite(Assets.m_TxtTileEmpty);
-			}
-			Spr.setPosition(static_cast<float>(i*Assets.m_TileSize.x + Pos.x), static_cast<float>(j*Assets.m_TileSize.y + Pos.y));
-			Target.draw(Spr, States);
-		}
-	}
-}*/
-
-/*void CGameUi::drawField(sf::RenderTarget& Target, sf::RenderStates States, const CAiPlayer::CField& Field, sf::Vector2i Pos) const
-{
-	const auto& Assets = m_Preset->getBasicAssets();
-	for (int i = 0; i < Field.getWidth(); i++)
-	{
-		for (int j = 0; j < Field.getHeight(); j++)
-		{
-			sf::Sprite Spr;
-			switch (Field.at(i, j).getState())
-			{
-			case CTile::CState::MISS:
-				Spr = sf::Sprite(Assets.m_TxtTileMiss);
-				break;
-			case CTile::CState::DESTROYED:
-			case CTile::CState::HIT:
-				Spr = sf::Sprite(Assets.m_TxtTileHit);
-				break;
-			case CTile::CState::TAKEN:
-				Spr = sf::Sprite(Assets.m_TxtTileTaken);
-				break;
-			default:
-				Spr = sf::Sprite(Assets.m_TxtTileEmpty);
-			}
-			Spr.setPosition(static_cast<float>(i*Assets.m_TileSize.x + Pos.x), static_cast<float>(j*Assets.m_TileSize.y + Pos.y));
-			Target.draw(Spr, States);
-		}
-	}
-}*/
-
-/*template<typename T>
-void CGameUi::drawShips(sf::RenderTarget & Target, sf::RenderStates States, const std::vector<T>& Ships, sf::Vector2i Pos) const
-{
-	auto TileSize = m_Preset->getBasicAssets().m_TileSize;
-	for (const auto p : Ships)
-	{
-		const CShip& s = *p;
-		const auto& Meta = s.getMeta();
-		if (!m_Preset->getShipAsset(Meta.m_TemplateId))
-			continue;
-		sf::Sprite Spr(s.isDestroyed() ? m_Preset->getShipAsset(Meta.m_TemplateId)->m_TxtDestroyed : m_Preset->getShipAsset(Meta.m_TemplateId)->m_TxtAlive);
-		Spr.rotate(static_cast<float>(Meta.m_Rotation.degrees()));
-		Spr.setPosition(Spr.getPosition().x - (Spr.getGlobalBounds().left - (Pos.x+Meta.m_Pos.first*TileSize.x)), Spr.getPosition().y - (Spr.getGlobalBounds().top - (Pos.y + Meta.m_Pos.second*TileSize.y)));	
-		Target.draw(Spr, States);
-	}
-}*/
 
 void CGameUi::playSound(const sf::SoundBuffer & Buffer)
 {

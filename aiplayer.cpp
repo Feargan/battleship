@@ -11,7 +11,7 @@ CAiPlayer::~CAiPlayer()
 {
 }
 
-CGameBoard CAiPlayer::buildBoard()
+/*CGameBoard CAiPlayer::buildBoard()
 {
 	CGameBoard Board(getController()->getPreset());
 	//CGameBoard::CField HelperField(Board.getField().getWidth(), Board.getField().getHeight());
@@ -47,7 +47,7 @@ CGameBoard CAiPlayer::buildBoard()
 		}
 	}
 	return Board;
-}
+}*/
 
 #include <iostream>
 #include <cstdlib>
@@ -59,6 +59,22 @@ void CAiPlayer::play()
 	auto& Context = m_Contexts[Victim];
 	auto& Targets = Context.m_Targets;
 	auto BoardSize = getController()->getPreset()->getBoardSize();
+	//if (!Targets.size())
+	{
+		std::cout << Context.m_Empty;
+		int Index = rand() % Context.m_Empty + 1;
+		int i;
+		for (i = 0; Index > 0; i++)
+		{
+			if (Context.m_Field.at(i%BoardSize.first, i / BoardSize.first).getState() == CState::EMPTY)
+				Index--;
+		}
+		i--;
+
+		getController()->attack(this, Victim, i%BoardSize.first, i / BoardSize.first);
+		return;
+	}
+	/*
 
 	if (!Targets.size())
 	{
@@ -177,7 +193,7 @@ void CAiPlayer::play()
 
 		Target.m_MatchingRotation = CRotation::CValue::NONE;
 		Target.m_LastMatch++;
-	}
+	}*/
 }
 
 const CAiPlayer::CField* CAiPlayer::getEnemyField(const IPlayer * Player) const

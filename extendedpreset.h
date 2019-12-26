@@ -14,18 +14,6 @@
 class CExtendedPreset : public CGamePreset
 {
 public:
-	enum class CState
-	{
-		OK,
-		INCOMPLETE,
-		ERROR,
-	};
-	struct CShipAsset
-	{
-		sf::Texture m_TxtAlive;
-		sf::Texture m_TxtDestroyed;
-		sf::Vector2<int> m_Size;
-	};
 	struct CBasicAssets
 	{
 		sf::SoundBuffer m_SndHit;
@@ -45,11 +33,9 @@ public:
 	CExtendedPreset();
 	~CExtendedPreset();
 
-	CState load(const char* Filename);
+	bool load(const char* Filename);
 	bool save(const char* Filename);
 
-	void putTemplate(const CShipLayout & Layout, const std::shared_ptr<CShipAsset>& Asset, int Amount);
-	const CShipAsset* getShipAsset(unsigned int TemplateId) const;
 	const CBasicAssets& getBasicAssets() const;
 	CBasicAssets& getBasicAssets();
 
