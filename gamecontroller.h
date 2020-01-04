@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gameboard.h"
+#include "gameboardbuilder.h"
 #include "gamepreset.h"
 #include "gameevents.h"
 #include "tile.h"
@@ -32,8 +32,7 @@ public:
 	virtual ~IGameController();
 
 	const IPlayer* whoseTurn() const;
-	const CGameBoard* seat(IPlayer* Player, const CGameBoard& Board);
-	const CGameBoard* seat(IPlayer* Player, CGameBoard&& Board);
+	virtual const CGameBoard* seat(IPlayer* Player, const CGameBoardBuilder& Builder);
 	virtual bool attack(IPlayer* Attacker, const IPlayer* Victim, int x, int y);
 	virtual void start();
 	virtual void run();
@@ -46,7 +45,6 @@ public:
 	const IPlayer* getSuggestedVictim() const;
 	const CGamePreset* getPreset() const;
 protected:
-	virtual bool canSeat(IPlayer* Player, const CGameBoard& Board);
 	void notifyObservers(const CGameEvent& Event);
 private:
 	void prepareVictims();

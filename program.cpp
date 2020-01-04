@@ -15,13 +15,13 @@ bool CProgram::init()
 
 
 	m_GamePreset.load("preset.bsp");
-	m_GamePreset.setMaxShipSize(6);
+	m_GamePreset.setMaxShipSize(5);
 	m_GamePreset.setShipAmount(1, 2);
 	m_GamePreset.setShipAmount(2, 2);
 	m_GamePreset.setShipAmount(3, 2);
 	m_GamePreset.setShipAmount(4, 2);
 	m_GamePreset.setShipAmount(5, 1);
-	m_GamePreset.setShipAmount(6, 0);
+	m_GamePreset.setShipAmount(5, 0);
 	
 	// global config
 	m_WindowWidth = 800;
@@ -35,6 +35,7 @@ bool CProgram::init()
 
 void CProgram::run()
 {
+	/*m_GamePreset.setMaxShipSize(6);
 	m_GamePreset.setShipAmount(1, 1);
 	m_GamePreset.setShipAmount(2, 0);
 	m_GamePreset.setShipAmount(3, 0);
@@ -44,16 +45,18 @@ void CProgram::run()
 	CGameBoard Board(&m_GamePreset);
 	struct CValues
 	{
-		float Min = 0.f;
-		float Max = 1.f;
+		float Min = 1.1f;
+		float Max = -0.1f;
 		float Avg = 0.f;
 		int Count = 0;
+		CGamePreset MinPreset;
+		CGamePreset MaxPreset;
 	};
 	std::map<int, CValues> m_Computed;
-	while (m_GamePreset.getShipAmount(3) != 3)
+	while (m_GamePreset.getShipAmount(6) != 1)
 	{
 		int s = 0, f = 0;
-		if (m_GamePreset.indicator() != std::numeric_limits<float>::infinity())
+		if (m_GamePreset.indicator() != std::numeric_limits<float>::infinity())// && m_GamePreset.indicator() < 0.42f)
 		{
 			std::cout << "i=" << m_GamePreset.indicator() << " ";
 			while (s + f < 10000)
@@ -64,13 +67,28 @@ void CProgram::run()
 			}
 			std::cout << "s=" << s << " ";
 			std::cout << "f=" << f << " :::: ";
-			std::cout << (float)s / 10000 << " vs " << m_GamePreset.successChance() << std::endl;
+			std::cout << (float)s / 10000 << " vs " << std::endl;
+
+			auto& Entry = m_Computed[static_cast<int>(m_GamePreset.indicator() * 100)];
+			float Chance = s / 10000.f;
+
+			auto PrevMin = Entry.Min;
+			Entry.Min = std::min(Entry.Min, Chance);
+			if (Entry.Min != PrevMin)
+				Entry.MinPreset = m_GamePreset;
+			auto PrevMax = Entry.Max;
+			Entry.Max = std::max(Entry.Max, Chance);
+			if (Entry.Max != PrevMax)
+				Entry.MaxPreset = m_GamePreset;
+
+			Entry.Avg += Chance;
+			Entry.Count++;
 		}
 
 
 		m_GamePreset.setShipAmount(1, m_GamePreset.getShipAmount(1) + 1);
 		std::cout << ":: ";
-		for (int i = 1; i <= m_GamePreset.getMaxShipSize(); i++)
+		for (int i = 1; i < m_GamePreset.getMaxShipSize(); i++)
 		{
 			if (m_GamePreset.getShipAmount(i) > 4)
 			{
@@ -80,34 +98,36 @@ void CProgram::run()
 			std::cout << m_GamePreset.getShipAmount(i) << " ";
 		}
 		std::cout << "\n";
-
-		if (m_GamePreset.indicator() == std::numeric_limits<float>::infinity())
-		{
-			continue;
-		}
-		auto& Entry = m_Computed[static_cast<int>(m_GamePreset.indicator() * 100)];
-		float Chance = s / 10000.f;
-		Entry.Min = std::min(Entry.Min, Chance);
-		Entry.Max <= std::max(Entry.Max, Chance);
-		Entry.Avg += Chance;
-		Entry.Count++;
+		
 	}
-	std::ofstream File("result.txt");
+	std::ofstream File("result3.txt");
 	for (auto &p : m_Computed)
 	{
-		File << p.first << " " << p.second.Min << " " << p.second.Max << " " << p.second.Avg / p.second.Count << std::endl;
+		File << p.first << " " << p.second.Min << " " << p.second.Max << " " << p.second.Avg / static_cast<float>(p.second.Count);
+		File << " (";
+		int i = 1;
+		for (; i < p.second.MinPreset.getMaxShipSize(); i++)
+		{
+			File << p.second.MinPreset.getShipAmount(i) << ',';
+		}
+		File << p.second.MinPreset.getShipAmount(i) << ')';
+
+		File << " (";
+		i = 1;
+		for (; i < p.second.MaxPreset.getMaxShipSize(); i++)
+		{
+			File << p.second.MaxPreset.getShipAmount(i) << ',';
+		}
+		File << p.second.MaxPreset.getShipAmount(i) << ')';
+		File << std::endl;
 	}
 	File.close();
-	return;
+	return;*/
+	//
     sf::RenderWindow m_Window(sf::VideoMode(m_WindowWidth, m_WindowHeight), "bs", sf::Style::Titlebar | sf::Style::Close);
     m_Window.setFramerateLimit(60);
-	IGameController Controller = IGameController(&m_GamePreset);
-	CAiPlayer AiPlayer(&Controller);
-	CLocalPlayer Player(&Controller);
 
-	std::unique_ptr<CGameUi> GameUi;
 	CStartGameUi StartUi(&m_GamePreset);
-
 	IScreenContext* Screen = &StartUi;
 
     while(m_Window.isOpen())

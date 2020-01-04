@@ -10,7 +10,6 @@ struct CGameEvent
 	enum class CType
 	{
 		PLAYER_ATTACKED,
-		SHIP_DESTROYED,
 		GAME_NEXT_TURN,
 		GAME_STARTED,
 		GAME_FINISHED,
@@ -25,11 +24,6 @@ struct CGameEvent
 			int m_Y;
 			CTile::CState m_State;
 		} m_PlayerAttackedEvent;
-		struct
-		{
-			const IPlayer* m_Victim;
-			const CShip* m_Ship; // fix to shared ptr
-		} m_ShipDestroyedEvent;
 		struct
 		{
 			const IPlayer* m_Next;

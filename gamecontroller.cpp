@@ -16,8 +16,10 @@ bool IGameController::attack(IPlayer * Attacker, const IPlayer* Victim, int x, i
 	if (Attacker != whoseTurn())
 		return false;
 	auto VictimIt = std::find(m_Victims.begin(), m_Victims.end(), Victim);
+	// check if the Victim can be attacked
 	if (VictimIt == m_Victims.end())
 		return false;
+	// get the map iterator of our Victim so that we can acquire their board
 	auto It = std::find_if(m_Players.begin(), m_Players.end(),
 		[Victim](const decltype(m_Players)::value_type &p) -> bool
 		{
@@ -28,6 +30,7 @@ bool IGameController::attack(IPlayer * Attacker, const IPlayer* Victim, int x, i
 
 	if (It == m_Players.end())
 		return false;
+	// perform attack
 	CTile::CState State = It->second.attack(x, y);
 	if (State == CTile::CState::NO_ATTACK)
 		return false;
@@ -37,16 +40,10 @@ bool IGameController::attack(IPlayer * Attacker, const IPlayer* Victim, int x, i
 	notifyObservers(AttackEvent);
 	if (State == CTile::CState::MISS)
 	{
-		m_Victims.erase(VictimIt);
+		m_Victims.erase(VictimIt); // cannot be attacked more in this turn if someone misses
 	}
 	else if (State == CTile::CState::DESTROYED)
 	{
-		CGameEvent DestroyEvent;
-		DestroyEvent.m_Type = CGameEvent::CType::SHIP_DESTROYED;
-		DestroyEvent.m_ShipDestroyedEvent.m_Ship = It->second.getField().at(x, y).getOwner().get(); // fix to shared_ptr
-		DestroyEvent.m_ShipDestroyedEvent.m_Victim = Victim;
-		notifyObservers(DestroyEvent);
-
 		if (It->second.destroyed())
 		{
 			m_Victims.erase(VictimIt);
@@ -58,19 +55,37 @@ bool IGameController::attack(IPlayer * Attacker, const IPlayer* Victim, int x, i
 	}
 	if (!m_Victims.size())
 	{
+		// let the next player play
 		m_Queue.pop();
 		m_Queue.push(Attacker);
+		// remove all who lost
 		while (m_Players[m_Queue.front()].destroyed())
 			m_Queue.pop();
-		prepareVictims();
+		if (m_Queue.size() <= 1)
+		{
+			// one player remained - it's done
+			CGameEvent FinishEvent;
+			FinishEvent.m_Type = CGameEvent::CType::GAME_FINISHED;
+			FinishEvent.m_GameFinishedEvent.m_Winner = m_Queue.front();
+			notifyObservers(FinishEvent);
+		}
+		else
+		{
+			prepareVictims();
+			CGameEvent NextTurnEvent;
+			NextTurnEvent.m_Type = CGameEvent::CType::GAME_NEXT_TURN;
+			NextTurnEvent.m_GameNextTurnEvent.m_Next = m_Queue.front();
+			notifyObservers(NextTurnEvent);
+		}
 	}
 	return true;
 }
 
 void IGameController::start()
 {
-	if (!m_Players.size() || m_Queue.size())
+	if (!m_Players.size() || m_Queue.size()) // has it started before?
 		return;
+	// prepare the queue
 	for (auto &p : m_Players)
 		m_Queue.push(p.first);
 	prepareVictims();
@@ -80,16 +95,12 @@ void IGameController::start()
 void IGameController::run()
 {
 	if (m_Queue.size() && m_Victims.size())
-	{
-		//while (m_Players[m_Queue.front()].destroyed())
-		//	m_Queue.pop();
-		m_Queue.front()->play();
-	}
+		m_Queue.front()->play(); // call next player to play if the game is in progress
 }
 
 bool IGameController::isInProgress() const
 {
-	return m_Victims.size() > 0;
+	return m_Victims.size() && m_Queue.size();
 }
 
 const IPlayer * IGameController::whoseTurn() const
@@ -97,24 +108,13 @@ const IPlayer * IGameController::whoseTurn() const
 	return m_Queue.size() ? m_Queue.front() : nullptr;
 }
 
-const CGameBoard * IGameController::seat(IPlayer * Player, const CGameBoard & Board)
+const CGameBoard * IGameController::seat(IPlayer * Player, const CGameBoardBuilder& Builder)
 {
-	if (!canSeat(Player, Board))
+	if (!(m_Players.find(Player) == m_Players.end() && Builder.isReady() && Builder.getPreset() == m_Preset))
 		return nullptr;
+	// all players receive game events by default
 	addObserver(Player);
-	auto& Emplaced = (m_Players.emplace(Player, Board)).first->second;
-	Emplaced.cleanup();
-	return &Emplaced;
-}
-
-const CGameBoard * IGameController::seat(IPlayer* Player, CGameBoard&& Board) // probably will get removed
-{
-	if (!canSeat(Player, Board))
-		return nullptr;
-	addObserver(Player);
-	auto& Emplaced = (m_Players.emplace(Player, Board)).first->second;
-	Emplaced.cleanup();
-	return &Emplaced;
+	return &(m_Players.emplace(Player, Builder.getBoard())).first->second;
 }
 
 void IGameController::addObserver(IObserver * Observer)
@@ -145,11 +145,6 @@ const IPlayer * IGameController::getSuggestedVictim() const
 const CGamePreset* IGameController::getPreset() const
 {
 	return m_Preset;
-}
-
-bool IGameController::canSeat(IPlayer * Player, const CGameBoard & Board)
-{
-	return m_Players.find(Player) == m_Players.end() && Board.isReady() && Board.getPreset() == m_Preset;
 }
 
 void IGameController::notifyObservers(const CGameEvent& Event)

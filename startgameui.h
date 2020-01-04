@@ -17,44 +17,8 @@
 #include <memory>
 #include <optional>
 
-class CStartGameUi : public IScreenContext, private IControl::IEventListener // IScreenContext
+class CStartGameUi : public IScreenContext, private IControl::IEventListener
 {
-	/*class CShipSlider : private IControl::IEventListener
-	{
-		CGamePreset* m_Preset;
-		CSlider* m_Slider;
-		CText* m_Text;
-		int m_Size;
-
-		virtual void onEvent(IControl* Control, int EventId)
-		{
-			if (Control == m_Slider && EventId == CSlider::CEvent::VALUE_CHANGED)
-			{
-				m_Preset->setShipAmount(m_Size, m_Slider->getValue());
-				m_Text->setText(std::to_string(m_Preset->getShipAmount(m_Size)).c_str());
-			}
-		}
-	public:
-		//CShipSlider() {}
-		CShipSlider(CPanel* Panel, sf::Vector2i Pos, const CSlider::CResources& Resources, const sf::Font& Font, CGamePreset* Preset, int Size) : m_Preset(Preset), m_Size(Size)
-		{
-			CSlider* Slider = new CSlider(Panel);
-			Slider->setResources(Resources);
-			Slider->setPosition({ Pos.x, Pos.y, 100, 15 });
-			Slider->setMin(0);
-			Slider->setMax(4);
-			Slider->setDiv(1);
-			Slider->setValue(m_Preset->getShipAmount(m_Size));
-			Slider->addListener(this);
-			m_Slider = Slider;
-
-			CText* Text = new CText(Panel);
-			sf::Text Properties(std::to_string(m_Preset->getShipAmount(m_Size)).c_str(), Font, 12);
-			Text->setPosition({ Pos.x + 110, Pos.y, 50, 15 });
-			Text->setProperties(Properties);
-			m_Text = Text;
-		}
-	};*/
 	using CPos = sf::Vector2i;
 	CPanel m_Panel;
 	CButton::CResources m_ButtonResources;
@@ -75,9 +39,10 @@ class CStartGameUi : public IScreenContext, private IControl::IEventListener // 
 	CPos m_BoardPos;
 	std::optional<CPos> m_CurrentTile;
 
-	CGameBoard m_Board;
+	CGameBoardBuilder m_Board;
 	CLocalPlayer m_Player;
 	CAiPlayer m_AiPlayer;
+	CAiPlayer m_AiPlayer2;//!!
 	IGameController m_Controller;
 	CExtendedPreset* m_Preset;
 public:

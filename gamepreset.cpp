@@ -50,11 +50,14 @@ int CGamePreset::getShipAmount(int Size) const
 
 float CGamePreset::indicator() const
 {
-	int Loose = 0, Strict = 0;
+	int Loose = 0 ;
+	float Strict = 0.f;
 	for (int i = 1; i<=static_cast<int>(m_Sizes.size()); i++)
 	{
-		Loose += ((i + 2) * 3)*m_Sizes[i-1];
-		Strict += ((i + 1) * 2)*m_Sizes[i-1];
+		/*Loose += ((i + 2) * 3)*m_Sizes[i-1];
+		Strict += ((i + 1) * 2)*m_Sizes[i-1];*/
+		Loose += ((i + 2) * 3)*m_Sizes[i - 1];
+		Strict += ((i + 1) * 2)*m_Sizes[i - 1];// * std::pow(0.9625f, i);
 	}
 	int BoardArea = m_BoardSize.first*m_BoardSize.second;
 	if (Loose < BoardArea)
@@ -62,10 +65,26 @@ float CGamePreset::indicator() const
 	return static_cast<float>(BoardArea - Strict) / BoardArea;//Strict > BoardArea ? 0.f : static_cast<float>(BoardArea-Strict) / BoardArea;
 }
 
-float CGamePreset::successChance() const
+static inline float cdf(float x, float Mean, float StdDev)
 {
-	static constexpr float Mean = 0.088101f;
-	static constexpr float StdDev = 0.067701f;
-	return 0.5f*(1+std::erf((indicator()-Mean)/(StdDev*std::sqrt(2))));
+	return 0.5f*(1 + std::erf((x - Mean) / (StdDev*std::sqrt(2.f))));
+}
+
+float CGamePreset::minSuccessChance() const
+{
+	if (indicator() == std::numeric_limits<float>::infinity())
+		return 1.f;
+	static const float Mean = 0.136410f;
+	static const float StdDev = 0.077328f;
+	return cdf(indicator(), Mean, StdDev);
+}
+
+float CGamePreset::maxSuccessChance() const
+{
+	if (indicator() == std::numeric_limits<float>::infinity())
+		return 1.f;
+	static const float Mean = 0.062398f;
+	static const float StdDev = 0.071962f;
+	return cdf(indicator(), Mean, StdDev);
 }
 

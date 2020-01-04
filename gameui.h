@@ -20,7 +20,7 @@ class CGameUi : public IScreenContext, private IGameController::IObserver, priva
 	IGameController* m_Controller;
 	CExtendedPreset* m_Preset;
 
-	CLocalPlayer* m_Player;
+	CIntelligentPlayer* m_Player;
 	const CGameBoard* m_PlayerBoard;
 	sf::Vector2i m_PlayerBoardPos, m_PlayerHelperPos;
 	std::optional<sf::Vector2i> m_CurrentTile;
@@ -34,7 +34,7 @@ class CGameUi : public IScreenContext, private IGameController::IObserver, priva
 	static const unsigned int MaxVoices = 16;
 	std::array<sf::Sound, MaxVoices> m_Sounds;
 public:
-	CGameUi(IGameController* Controller, CExtendedPreset* Preset, CLocalPlayer* Player, const CGameBoard* PlayerBoard);
+	CGameUi(IGameController* Controller, CExtendedPreset* Preset, CIntelligentPlayer* Player, const CGameBoard* PlayerBoard);
 	~CGameUi();
 
 	virtual void run() override;

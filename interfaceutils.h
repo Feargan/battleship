@@ -2,6 +2,7 @@
 #include "gameboard.h"
 #include "extendedpreset.h"
 #include "gameboard.h"
+#include "intelligentplayer.h"
 
 #include <optional>
 #include <memory>
@@ -13,6 +14,7 @@ class CInterfaceUtils
 {
 public:
 	static std::optional<sf::Vector2i> getTilePos(sf::Vector2i BoardSize, sf::Vector2i TilePxSize, sf::Vector2i BoardPos, sf::Vector2i CursorPos);
+	static void drawField(sf::RenderTarget& Target, sf::RenderStates States, const CExtendedPreset& Preset, const CIntelligentPlayer::CField& Field, sf::Vector2i Pos, std::optional<sf::Vector2i> SelectedTile);
 	static void drawField(sf::RenderTarget& Target, sf::RenderStates States, const CExtendedPreset& Preset, const CGameBoard::CField& Field, sf::Vector2i Pos, std::optional<sf::Vector2i> SelectedTile);
 	//template<typename T> static void drawShips(sf::RenderTarget& Target, sf::RenderStates States, const CExtendedPreset& Preset, const std::vector<T>& Ships, sf::Vector2i FieldPos); // shared_ptr...
 };

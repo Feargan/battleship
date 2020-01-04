@@ -5,7 +5,7 @@
 
 const unsigned int CGameUi::MaxVoices;
 
-CGameUi::CGameUi(IGameController* Controller, CExtendedPreset* Preset, CLocalPlayer* Player, const CGameBoard* PlayerBoard)
+CGameUi::CGameUi(IGameController* Controller, CExtendedPreset* Preset, CIntelligentPlayer* Player, const CGameBoard* PlayerBoard)
 	: m_Controller(Controller), m_Preset(Preset), m_NextVoice(0), m_Player(Player), m_PlayerBoard(PlayerBoard)
 {
 	if (!m_Controller || !m_Preset)
@@ -64,7 +64,7 @@ void CGameUi::handleInput(sf::Event Event)
 	}
 	else if (Event.type == sf::Event::MouseButtonPressed && Event.mouseButton.button == sf::Mouse::Button::Left)
 	{
-		if (m_CurrentTile && m_Controller->whoseTurn() == m_Player)
+		if (m_CurrentTile && m_Controller->whoseTurn() == m_Player && m_Player->getEnemyField(m_CurrentEnemy)->at(m_CurrentTile->x, m_CurrentTile->y).getState() == CTile::CState::EMPTY)
 		{
 			m_Controller->attack(m_Player, m_CurrentEnemy, m_CurrentTile->x, m_CurrentTile->y);
 		}
@@ -81,7 +81,7 @@ void CGameUi::draw(sf::RenderTarget & Target, sf::RenderStates States) const
 	//CInterfaceUtils::drawShips(Target, States, *m_Preset, m_PlayerBoard->getShips(), m_PlayerBoardPos);
 	for (unsigned i = 0; i < m_Enemies.size(); i++)
 	{
-		CInterfaceUtils::drawField(Target, States, *m_Preset, m_Player->getEnemyField(m_Enemies[i])->m_Field, m_PlayerHelperPos + sf::Vector2i(i * 300, 0), m_Enemies[i] == m_CurrentEnemy ? m_CurrentTile : std::optional<sf::Vector2i>());
+		CInterfaceUtils::drawField(Target, States, *m_Preset, *m_Player->getEnemyField(m_Enemies[i]), m_PlayerHelperPos + sf::Vector2i(i * 300, 0), m_Enemies[i] == m_CurrentEnemy ? m_CurrentTile : std::optional<sf::Vector2i>());
 		//CInterfaceUtils::drawShips(Target, States, *m_Preset, m_Player->getEnemyField(m_Enemies[i])->m_DestroyedShips, m_PlayerHelperPos + sf::Vector2i(i * 300, 0));
 	}
 
@@ -127,6 +127,7 @@ void CGameUi::onEvent(const CGameEvent & Event)
 			m_VictoryInfo.setString("wygra³eœ");
 			playSound(m_Preset->getBasicAssets().m_SndVictory);
 		}
+		break;
 	}
 }
 

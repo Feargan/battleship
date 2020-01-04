@@ -42,7 +42,6 @@ void CFieldEditor::handleInput(sf::Event Event)
 				m_Field[{m_CurrentTile->x, m_CurrentTile->y}] = CTile();
 			}
 		}
-		//m_Board.remove(m_CurrentTile->x, m_CurrentTile->y);
 	}
 }
 

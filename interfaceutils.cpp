@@ -13,6 +13,37 @@ std::optional<sf::Vector2i> CInterfaceUtils::getTilePos(sf::Vector2i BoardSize, 
 	return {};
 }
 
+void CInterfaceUtils::drawField(sf::RenderTarget & Target, sf::RenderStates States, const CExtendedPreset & Preset, const CIntelligentPlayer::CField & Field, sf::Vector2i Pos, std::optional<sf::Vector2i> SelectedTile)
+{
+	const auto& Assets = Preset.getBasicAssets();
+	for (int i = 0; i < Field.getWidth(); i++)
+	{
+		for (int j = 0; j < Field.getHeight(); j++)
+		{
+			sf::Sprite Spr;
+			switch (Field.at(i, j).getState())
+			{
+			case CTile::CState::MISS:
+				Spr = sf::Sprite(Assets.m_TxtTileMiss);
+				break;
+			case CTile::CState::DESTROYED:
+			case CTile::CState::HIT:
+				Spr = sf::Sprite(Assets.m_TxtTileHit);
+				break;
+			case CTile::CState::TAKEN:
+				Spr = sf::Sprite(Assets.m_TxtTileTaken);
+				break;
+			default:
+				Spr = sf::Sprite(Assets.m_TxtTileEmpty);
+			}
+			Spr.setPosition(i*Assets.m_TileSize.x + static_cast<float>(Pos.x), j*Assets.m_TileSize.y + static_cast<float>(Pos.y));
+			if (SelectedTile && SelectedTile->x == i && SelectedTile->y == j)
+				Spr.setColor(sf::Color(128, 255, 128));
+			Target.draw(Spr, States);
+		}
+	}
+}
+
 void CInterfaceUtils::drawField(sf::RenderTarget & Target, sf::RenderStates States, const CExtendedPreset & Preset, const CGameBoard::CField & Field, sf::Vector2i Pos, std::optional<sf::Vector2i> SelectedTile)
 {
 	const auto& Assets = Preset.getBasicAssets();

@@ -24,6 +24,7 @@ public:
 	int getShipAmount(int Size) const;
 
 	float indicator() const;
-	float successChance() const;
+	float minSuccessChance() const;
+	float maxSuccessChance() const;
 };
 
