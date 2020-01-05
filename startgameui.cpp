@@ -3,52 +3,71 @@
 
 #include <SFML/Graphics.hpp>
 
-CStartGameUi::CStartGameUi(CExtendedPreset* Preset)
-	: m_BoardPos{260, 150}, m_Preset(Preset), m_Controller(Preset),  m_AiPlayer(nullptr), m_AiPlayer2(nullptr), m_Player(nullptr), m_Board(Preset)
-{
-	m_Player = CLocalPlayer(&m_Controller);
-	m_AiPlayer = CAiPlayer(&m_Controller);
-	m_AiPlayer2 = CAiPlayer(&m_Controller);
-	m_Preset = Preset;
+const sf::Vector2i CStartGameUi::BOARD_POS = sf::Vector2i{ 260, 120 };
+const sf::Vector2i CStartGameUi::SLIDER_POS = sf::Vector2i{ 10, 50 };
 
-	m_ButtonResources.load("button.irc");
-	m_SliderResources.load("slider.irc");
+CStartGameUi::CStartGameUi(const CGameResources& GameResources, const CUiResources& UiResources)
+	: m_BoardPos(BOARD_POS), m_Controller(&m_Preset), m_AiPlayer(&m_Controller), m_Board(&m_Preset), m_GameResources(GameResources), m_UiResources(UiResources)
+{
+	m_Preset.setBoardSize({ 10, 10 });
+	m_Preset.setMaxShipSize(5);
+	m_Preset.setShipAmount(1, 2);
+	m_Preset.setShipAmount(2, 2);
+	m_Preset.setShipAmount(3, 2);
+	m_Preset.setShipAmount(4, 2);
+	m_Preset.setShipAmount(5, 1);
+	m_Preset.setShipAmount(5, 0);
+	m_Board.rebuild();
+
+	auto& ButtonResources = UiResources.m_ButtonResources;
+	auto& SliderResources = UiResources.m_SliderResources;
 
 	m_StartButton = new CButton(&m_Panel);
-	m_StartButton->setResources(m_ButtonResources);
+	m_StartButton->setResources(ButtonResources);
 	m_StartButton->setPosition({ 200, 10, 100, 100 });
 	m_StartButton->setTitle("Start");
 	m_StartButton->addListener(this);
 
 	m_AutoButton = new CButton(&m_Panel);
-	m_AutoButton->setResources(m_ButtonResources);
+	m_AutoButton->setResources(ButtonResources);
 	m_AutoButton->setPosition({ 320, 10, 100, 100 });
 	m_AutoButton->setTitle("Auto");
 	m_AutoButton->addListener(this);
 
 	m_ClearButton = new CButton(&m_Panel);
-	m_ClearButton->setResources(m_ButtonResources);
+	m_ClearButton->setResources(ButtonResources);
 	m_ClearButton->setPosition({ 440, 10, 100, 100 });
 	m_ClearButton->setTitle("Clear");
 	m_ClearButton->addListener(this);
 
-	sf::Vector2i SliderPos = { 10, 50 };
-	sf::Text TemplateText("", m_ButtonResources.m_Font, 12);
-	for (int i = 1; i <= m_Preset->getMaxShipSize(); i++)
+	m_SurroundCheck = new CCheckBox(&m_Panel);
+	m_SurroundCheck->setResources(ButtonResources);
+	m_SurroundCheck->setPosition({ 10, 270, 200, 40 });
+	m_SurroundCheck->setTitle("Surround destroyed");
+	m_SurroundCheck->setState(true);
+
+	m_BotCheck = new CCheckBox(&m_Panel);
+	m_BotCheck->setResources(ButtonResources);
+	m_BotCheck->setPosition({ 10, 320, 200, 40 });
+	m_BotCheck->setTitle("Play as a bot");
+
+	sf::Vector2i SliderPos = SLIDER_POS;
+	sf::Text TemplateText("", ButtonResources.m_Font, 12);
+	for (int i = 1; i <= m_Preset.getMaxShipSize(); i++)
 	{
 		CSlider* Slider = new CSlider(&m_Panel);
-		Slider->setResources(m_SliderResources);
+		Slider->setResources(SliderResources);
 		Slider->setPosition({ SliderPos.x+20, SliderPos.y+i*30, 100, 15 });
 		Slider->setMin(0);
 		Slider->setMax(4);
 		Slider->setDiv(1);
-		Slider->setValue(m_Preset->getShipAmount(i));
+		Slider->setValue(m_Preset.getShipAmount(i));
 		Slider->addListener(this);
 		
 		CText* Amount = new CText(&m_Panel);
 		Amount->setProperties(TemplateText);
 		Amount->setPosition({ SliderPos.x + 130, SliderPos.y + i * 30, 15, 15 });
-		Amount->setText(std::to_string(m_Preset->getShipAmount(i)).c_str());
+		Amount->setText(std::to_string(m_Preset.getShipAmount(i)).c_str());
 
 		CText* Remaining = new CText(&m_Panel);
 		Remaining->setProperties(TemplateText);
@@ -64,15 +83,13 @@ CStartGameUi::CStartGameUi(CExtendedPreset* Preset)
 	}
 	m_ChanceText = new CText(&m_Panel);
 	m_ChanceText->setProperties(TemplateText);
-	m_ChanceText->setPosition({ SliderPos.x, SliderPos.y + (m_Preset->getMaxShipSize()+1) * 30, 15, 15 });
+	m_ChanceText->setPosition({ SliderPos.x, SliderPos.y + (m_Preset.getMaxShipSize()+1) * 30, 15, 15 });
 	updateChance();
-	//InfoText->setPosition({10, })
 
 	m_ErrorText = new CText(&m_Panel);
 	m_ErrorText->setProperties(TemplateText);
 	m_ErrorText->setPosition({ 10, 400, 200, 15 });
 	m_ErrorText->setTimer(3000);
-	//m_ErrorText->setText((std::string("Chance to autofill a clear board: ") + std::to_string(m_Preset->minSuccessChance())).c_str());
 
 	TemplateText.rotate(90.f);
 	CText* InfoText = new CText(&m_Panel);
@@ -108,10 +125,7 @@ void CStartGameUi::handleInput(sf::Event Event)
 	m_Panel.handleInput(Event);
 	if (Event.type == sf::Event::MouseMoved)
 	{
-		m_CurrentTile = CInterfaceUtils::getTilePos({ m_Preset->getBoardSize().first, m_Preset->getBoardSize().second }, m_Preset->getBasicAssets().m_TileSize, m_BoardPos, { Event.mouseMove.x, Event.mouseMove.y });
-		//if (m_CurrentTile)
-		//	m_CanPlace = m_Board.canPlace(m_CurrentTile->x, m_CurrentTile->y);
-
+		m_CurrentTile = CInterfaceUtils::getTilePos({ m_Preset.getBoardSize().first, m_Preset.getBoardSize().second }, m_GameResources.m_TileSize, m_BoardPos, { Event.mouseMove.x, Event.mouseMove.y });
 	}
 	else if (Event.type == sf::Event::MouseButtonPressed && Event.mouseButton.button == sf::Mouse::Button::Left)
 	{
@@ -145,7 +159,13 @@ void CStartGameUi::run()
 {
 	if (m_GameUi)
 	{
-		m_GameUi->run();
+		if (!m_GameUi->isCompleted())
+			m_GameUi->run();
+		else
+		{
+			m_GameUi = {};
+			m_Board.clear();
+		}
 		return;
 	}
 	m_Panel.update();
@@ -158,10 +178,8 @@ void CStartGameUi::draw(sf::RenderTarget & Target, sf::RenderStates States) cons
 		Target.draw(*m_GameUi);
 		return;
 	}
-	if (!m_Preset)
-		return;
+
 	const auto& Field = m_Board.getField();
-	const auto& Assets = m_Preset->getBasicAssets();
 	for (int i = 0; i < Field.getWidth(); i++)
 	{
 		for (int j = 0; j < Field.getHeight(); j++)
@@ -171,19 +189,19 @@ void CStartGameUi::draw(sf::RenderTarget & Target, sf::RenderStates States) cons
 			{
 			case CTile::CState::RESERVED:
 			case CTile::CState::MISS:
-				Spr = sf::Sprite(Assets.m_TxtTileMiss);
+				Spr = sf::Sprite(m_GameResources.m_TxtTileMiss);
 				break;
 			case CTile::CState::DESTROYED:
 			case CTile::CState::HIT:
-				Spr = sf::Sprite(Assets.m_TxtTileHit);
+				Spr = sf::Sprite(m_GameResources.m_TxtTileHit);
 				break;
 			case CTile::CState::TAKEN:
-				Spr = sf::Sprite(Assets.m_TxtTileTaken);
+				Spr = sf::Sprite(m_GameResources.m_TxtTileTaken);
 				break;
 			default:
-				Spr = sf::Sprite(Assets.m_TxtTileEmpty);
+				Spr = sf::Sprite(m_GameResources.m_TxtTileEmpty);
 			}
-			Spr.setPosition(i*Assets.m_TileSize.x + static_cast<float>(m_BoardPos.x), j*Assets.m_TileSize.y + static_cast<float>(m_BoardPos.y));
+			Spr.setPosition(i*m_GameResources.m_TileSize.x + static_cast<float>(m_BoardPos.x), j*m_GameResources.m_TileSize.y + static_cast<float>(m_BoardPos.y));
 
 			if (Field.at(i, j).getState() == CTile::CState::RESERVED)
 				Spr.setColor(sf::Color(255, 200, 255));
@@ -193,7 +211,6 @@ void CStartGameUi::draw(sf::RenderTarget & Target, sf::RenderStates States) cons
 			Target.draw(Spr, States);
 		}
 	}
-	//CInterfaceUtils::drawShips(Target, States, *m_Preset, m_Board.getShips(), m_BoardPos);
 	Target.draw(m_Panel);
 }
 
@@ -207,8 +224,8 @@ void CStartGameUi::onEvent(IControl * Control, int EventId)
 			m_ErrorText->flash();
 			return;
 		}
-		auto AiBoard = CGameBoardBuilder(m_Preset);
-		if (m_Preset->minSuccessChance() <= 0.0025f)
+		auto AiBoard = CGameBoardBuilder(&m_Preset);
+		if (m_Preset.minSuccessChance() <= 0.0025f)
 		{
 			m_ErrorText->setText("Minimum autofill chance too low, aborted.");
 			m_ErrorText->flash();
@@ -219,33 +236,26 @@ void CStartGameUi::onEvent(IControl * Control, int EventId)
 			AiBoard.clear();
 			AiBoard.autoFill();
 		} while (!AiBoard.isReady());
-		//auto BoardPtr = m_Controller.seat(&m_Player, m_Board);
-		auto BoardPtr = m_Controller.seat(&m_AiPlayer2, m_Board);
+		m_Controller = IGameController(&m_Preset);
+		m_AiPlayer = CAiPlayer(&m_Controller);
 		m_Controller.seat(&m_AiPlayer, AiBoard);
+		if (m_BotCheck->getState())
+			m_Player = std::make_unique<CAiPlayer>(&m_Controller);
+		else
+			m_Player = std::make_unique<CLocalPlayer>(&m_Controller);
+		auto BoardPtr = m_Controller.seat(m_Player.get(), m_Board);
+		m_Player->surroundDestroyed(m_SurroundCheck->getState());
 		m_Controller.start();
-		m_GameUi = std::unique_ptr<CGameUi>(new CGameUi(&m_Controller, m_Preset, &m_AiPlayer2, BoardPtr));
+		m_GameUi = std::unique_ptr<CGameUi>(new CGameUi(&m_Controller, m_Player.get(), BoardPtr, m_GameResources, m_UiResources));
 	}
 	else if (Control == m_AutoButton && EventId == CButton::CEvent::PRESSED)
 	{
-		if (m_Preset->minSuccessChance() <= 0.0025f)
+		if (m_Preset.minSuccessChance() <= 0.0025f)
 		{
 			m_ErrorText->setText("Minimum autofill chance too low, aborted.");
 			m_ErrorText->flash();
 			return;
 		}
-
-		/*std::cout << "i=" << m_Preset->indicator() << " ";
-		int s = 0, f = 0;
-		while (s + f < 10000)
-		{
-			m_Board.clear();
-			m_Board.autoFill();
-			m_Board.isReady() ? s++ : f++;
-		}
-		std::cout << "s=" << s << " ";
-		std::cout << "f=" << f << " :::: ";
-		std::cout << (float)s / 10000 << " vs " << m_Preset->minSuccessChance() << std::endl;*/
-
 		if (!m_Board.isEmpty())
 		{
 			m_Board.autoFill();
@@ -277,8 +287,8 @@ void CStartGameUi::onEvent(IControl * Control, int EventId)
 		if (It != m_ShipSliders.end())
 		{
 			int Index = It - m_ShipSliders.begin() + 1;
-			m_Preset->setShipAmount(Index, It->m_Slider->getValue());
-			It->m_Amount->setText(std::to_string(m_Preset->getShipAmount(Index)).c_str());
+			m_Preset.setShipAmount(Index, It->m_Slider->getValue());
+			It->m_Amount->setText(std::to_string(m_Preset.getShipAmount(Index)).c_str());
 			It->m_Remaining->setText(std::to_string(m_Board.remaining(Index)).c_str());
 			updateChance();
 		}
@@ -288,16 +298,13 @@ void CStartGameUi::onEvent(IControl * Control, int EventId)
 void CStartGameUi::updateRemaining()
 {
 	for (unsigned int i = 0; i<m_ShipSliders.size(); i++)
-	{
-		//m_ShipSliders[i].m_Amount->setText(std::to_string(m_Preset->getShipAmount(i+1)).c_str());
 		m_ShipSliders[i].m_Remaining->setText(std::to_string(m_Board.remaining(i+1)).c_str());
-	}
 }
 
 void CStartGameUi::updateChance()
 {
-	if(m_Preset->minSuccessChance() != 1.f)
-		m_ChanceText->setText((std::string("Autofill chance: ") + std::to_string(m_Preset->minSuccessChance()*100) + "-" + std::to_string(m_Preset->maxSuccessChance()*100) + "%").c_str());
+	if(m_Preset.minSuccessChance() != 1.f)
+		m_ChanceText->setText((std::string("Autofill chance: ") + std::to_string(m_Preset.minSuccessChance()*100) + "-" + std::to_string(m_Preset.maxSuccessChance()*100) + "%").c_str());
 	else
 		m_ChanceText->setText((std::string("Autofill chance: 100%").c_str()));
 }

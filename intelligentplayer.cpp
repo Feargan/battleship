@@ -2,13 +2,18 @@
 
 #include <optional>
 
-CIntelligentPlayer::CIntelligentPlayer(IGameController* Controller) : IPlayer(Controller)
+CIntelligentPlayer::CIntelligentPlayer(IGameController* Controller) : IPlayer(Controller), m_SurroundDestroyed(true)
 {
 }
 
 
 CIntelligentPlayer::~CIntelligentPlayer()
 {
+}
+
+void CIntelligentPlayer::surroundDestroyed(bool Enable)
+{
+	m_SurroundDestroyed = Enable;
 }
 
 const CIntelligentPlayer::CField* CIntelligentPlayer::getEnemyField(const IPlayer * Player) const
@@ -115,6 +120,9 @@ void CIntelligentPlayer::onPlayerAttacked(const IPlayer * Victim, int x, int y, 
 		{
 			if (!(t->getState() == CState::HIT || t->getState() == CState::DESTROYED))
 				continue;
+			t->setState(CState::DESTROYED);
+			if (!m_SurroundDestroyed)
+				continue;
 			for (int i = -1; i <= 1; i++)
 			{
 				for (int j = -1; j <= 1; j++)
@@ -128,7 +136,6 @@ void CIntelligentPlayer::onPlayerAttacked(const IPlayer * Victim, int x, int y, 
 					}
 				}
 			}
-			t->setState(CState::DESTROYED);
 		}
 		Context.m_Targets.erase(Root);
 	}

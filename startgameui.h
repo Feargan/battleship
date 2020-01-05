@@ -1,12 +1,11 @@
 #pragma once
-
-//#include "entryship.h"
-#include "extendedpreset.h"
-//#include "radiogroup.h"
+#include "gameresources.h"
+#include "uiresources.h"
 #include "slider.h"
 #include "text.h"
 #include "gameboard.h"
 #include "button.h"
+#include "checkbox.h"
 #include "screencontext.h"
 #include "localplayer.h"
 #include "aiplayer.h"
@@ -20,14 +19,20 @@
 class CStartGameUi : public IScreenContext, private IControl::IEventListener
 {
 	using CPos = sf::Vector2i;
+	static const CPos BOARD_POS;
+	static const CPos SLIDER_POS;
+
+	CGameResources m_GameResources;
+	CUiResources m_UiResources;
+
 	CPanel m_Panel;
-	CButton::CResources m_ButtonResources;
-	CSlider::CResources m_SliderResources;
 	CText* m_ChanceText;
 	CText* m_ErrorText;
 	CButton* m_StartButton;
 	CButton* m_AutoButton;
 	CButton* m_ClearButton;
+	CCheckBox* m_SurroundCheck;
+	CCheckBox* m_BotCheck;
 	std::unique_ptr<CGameUi> m_GameUi;
 	struct CShipSlider
 	{
@@ -40,13 +45,12 @@ class CStartGameUi : public IScreenContext, private IControl::IEventListener
 	std::optional<CPos> m_CurrentTile;
 
 	CGameBoardBuilder m_Board;
-	CLocalPlayer m_Player;
+	std::unique_ptr<CIntelligentPlayer> m_Player;
 	CAiPlayer m_AiPlayer;
-	CAiPlayer m_AiPlayer2;//!!
 	IGameController m_Controller;
-	CExtendedPreset* m_Preset;
+	CGamePreset m_Preset;
 public:
-	CStartGameUi(CExtendedPreset* Preset);
+	CStartGameUi(const CGameResources& GameResources, const CUiResources& UiResources);
 	~CStartGameUi();
 
 	virtual void handleInput(sf::Event Event) override;

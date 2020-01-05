@@ -47,13 +47,13 @@ protected:
 		int m_Empty;
 	};
 	std::unordered_map<const IPlayer*, CContext> m_Contexts;
+private:
+	bool m_SurroundDestroyed;
 public:
 	CIntelligentPlayer(IGameController* Controller);
 	virtual ~CIntelligentPlayer();
 
-	//virtual void play() override;
-
-	//void surroundDestroyed(bool Enable);
+	void surroundDestroyed(bool Enable = true);
 
 	const CField* getEnemyField(const IPlayer* Player) const; //
 protected:

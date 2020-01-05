@@ -16,7 +16,7 @@ bool CSlider::CResources::load(const char* Filename)
 	return true;
 }
 
-CSlider::CSlider(CPanel * Panel) : IControl(Panel), m_Min(0), m_Max(0), m_Div(1), m_Value(0)
+CSlider::CSlider(CPanel * Panel) : IControl(Panel), m_Min(0), m_Max(0), m_Div(1), m_Value(0), m_Hover(false)
 {
 }
 
@@ -74,13 +74,14 @@ void CSlider::handleInput(sf::Event Event)
 {
 	if (getPanel()->GetCurrentFocus() == this)
 	{
+		m_Hover = false;
 		int x;
-		if(Event.type == sf::Event::MouseMoved)
+		if (Event.type == sf::Event::MouseMoved)
 			x = Event.mouseMove.x - getPosition().left;
-		else if(Event.type == sf::Event::MouseButtonPressed)
+		else if (Event.type == sf::Event::MouseButtonPressed)
 			x = Event.mouseButton.x - getPosition().left;
 		else return;
-		int Value = static_cast<int>(std::floor(static_cast<double>(x) / getPosition().width * (m_Max - m_Min) / m_Div+m_Min+0.5))*m_Div;
+		int Value = static_cast<int>(std::floor(static_cast<double>(x) / getPosition().width * (m_Max - m_Min) / m_Div + m_Min + 0.5))*m_Div;
 		if (Value > m_Max)
 			Value = m_Max;
 		if (Value < m_Min)
@@ -90,6 +91,14 @@ void CSlider::handleInput(sf::Event Event)
 			m_Value = Value;
 			event(VALUE_CHANGED);
 		}
+	}
+	else
+	{
+		if ((Event.type == sf::Event::MouseMoved && getPosition().contains({ Event.mouseMove.x, Event.mouseMove.y }))
+			|| (Event.type == sf::Event::MouseButtonReleased && getPosition().contains({ Event.mouseButton.x, Event.mouseButton.y })))
+			m_Hover = true;
+		else
+			m_Hover = false;
 	}
 }
 
@@ -102,5 +111,7 @@ void CSlider::draw(sf::RenderTarget & Target, sf::RenderStates States) const
 	Target.draw(Spr, States);
 	Spr = sf::Sprite(m_Resources.m_TxtPointer);
 	Spr.setPosition(Pos.left + static_cast<float>(m_Value-m_Min) / (m_Max - m_Min)*Pos.width - m_Resources.m_TxtPointer.getSize().x / 2.f, static_cast<float>(Pos.top));
+	if (m_Hover)
+		Spr.setColor(sf::Color(255, 200, 200));
 	Target.draw(Spr, States);
 }

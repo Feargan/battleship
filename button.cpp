@@ -49,19 +49,6 @@ void CButton::setResources(const CResources & Resources)
 
 void CButton::update()
 {
-	// change this to: m_PosChanged = true when setPosition() was called
-	// then if(m_PosChanged) ... continue with updatePos()
-
-
-	// animation update
-
-	// animation->play();
-
-	// sprite pos update, or make a texture and draw it depending on the pos - updatePos() not needed
-	//if (m_Pos == m_LastPos)
-	//	return;
-	//m_LastPos = m_Pos;
-	//updatePos();
 }
 
 void CButton::handleInput(sf::Event Event)

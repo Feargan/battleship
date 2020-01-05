@@ -25,10 +25,10 @@ public:
 private:
     std::string m_Title;
 
-    bool m_Held;
-    bool m_Hover;
-
     CResources m_Resources;
+protected:
+	bool m_Held;
+	bool m_Hover;
 public:
     CButton(CPanel* Panel);
     ~CButton(){}

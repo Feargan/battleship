@@ -22,6 +22,7 @@ private:
 	int m_Max;
 	int m_Div;
 	int m_Value;
+	bool m_Hover;
 public:
 	CSlider(CPanel* Panel);
 	virtual ~CSlider();

@@ -21,6 +21,7 @@ public:
 	CGameBoardBuilder(const CGamePreset* Preset=nullptr);
 	~CGameBoardBuilder();
 
+	void rebuild();
 	bool canPlace(int x, int y) const;
 	bool place(int x, int y);
 	void remove(int x, int y);

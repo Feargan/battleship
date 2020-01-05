@@ -6,14 +6,20 @@ CGameBoardBuilder::CGameBoardBuilder(const CGamePreset* Preset) : m_Preset(Prese
 {
 	if (!m_Preset)
 		return;
-	auto Size = m_Preset->getBoardSize();
-	m_Field = CField(Size.first, Size.second);
-	clear();
+	rebuild();
 }
 
 
 CGameBoardBuilder::~CGameBoardBuilder()
 {
+}
+
+void CGameBoardBuilder::rebuild()
+{
+	auto Size = m_Preset->getBoardSize();
+	if (Size.first > 0 && Size.second > 0)
+		m_Board = CGameBoard(Size.first, Size.second);
+	clear();
 }
 
 bool CGameBoardBuilder::canPlace(int x, int y) const
@@ -38,11 +44,7 @@ bool CGameBoardBuilder::place(int x, int y)
 		return false;
 	set(x, y, CTile::CState::TAKEN);
 	m_NewShip.insert({ x, y });
-	//CTileSet Reserve;
 	surround(m_NewShip, true, CState::RESERVED, false);
-	/*getNeighbours(x, y, Reserve, true, [](const CTile& Tile)-> bool {return Tile.getState() == CState::EMPTY;});
-	for(auto p : Reserve)
-			m_Field[p] = CTile::CState::RESERVED;*/
 	return true;
 }
 

@@ -4,19 +4,14 @@
 #include <algorithm>
 
 const unsigned int CGameUi::MaxVoices;
+const sf::Vector2i CGameUi::PLAYER_BOARD_POS = sf::Vector2i{ 300, 50 };
+const sf::Vector2i CGameUi::HELPER_BOARD_POS = sf::Vector2i{ 300, 300 };
 
-CGameUi::CGameUi(IGameController* Controller, CExtendedPreset* Preset, CIntelligentPlayer* Player, const CGameBoard* PlayerBoard)
-	: m_Controller(Controller), m_Preset(Preset), m_NextVoice(0), m_Player(Player), m_PlayerBoard(PlayerBoard)
+CGameUi::CGameUi(IGameController* Controller, CIntelligentPlayer* Player, const CGameBoard* PlayerBoard, const CGameResources& GameResources, const CUiResources& UiResources)
+	: m_Controller(Controller), m_NextVoice(0), m_Player(Player), m_PlayerBoard(PlayerBoard), m_GameResources(GameResources), m_PlayerBoardPos(PLAYER_BOARD_POS), m_PlayerHelperPos(HELPER_BOARD_POS), m_Completed(false)
 {
-	if (!m_Controller || !m_Preset)
-		throw std::exception("CGameUi(): game controller or preset not set");
-	if (m_Preset != m_Controller->getPreset())
-		throw std::exception("CGameUi(): game controller has incorrect preset");
 	if (!m_Controller->isInProgress())
-		throw std::exception("CGameUi(): game not in progress");
-
-	m_PlayerBoardPos = { 0, 0 };
-	m_PlayerHelperPos = { 0, 300 };
+		throw std::exception("game not in progress");
 
 	m_Controller->addObserver(this);
 
@@ -26,11 +21,26 @@ CGameUi::CGameUi(IGameController* Controller, CExtendedPreset* Preset, CIntellig
 			m_Enemies.push_back(p);
 	}
 
-	// cut ---v
-	m_VictoryInfo.setPosition(200, 500);
-	m_Font.loadFromFile("arial.ttf");
-	m_VictoryInfo.setFont(m_Font);
-	m_VictoryInfo.setFillColor(sf::Color());
+	m_ExitButton = new CButton(&m_Panel);
+	m_ExitButton->setResources(UiResources.m_ButtonResources);
+	m_ExitButton->setPosition({ 10, 40, 100, 30 });
+	m_ExitButton->setTitle("Surrender");
+	m_ExitButton->addListener(this);
+
+	sf::Text TemplateText("", UiResources.m_ButtonResources.m_Font, 30);
+	m_VictoryText = new CText(&m_Panel);
+	m_VictoryText->setProperties(TemplateText);
+	m_VictoryText->setPosition({ 50, 250, 200, 40 });
+
+	TemplateText.setCharacterSize(12);
+	TemplateText.rotate(270.f);
+
+	CText* Text = new CText(&m_Panel);
+	Text->setProperties(TemplateText);
+	Text->setPosition({ m_PlayerBoardPos.x - 15, m_PlayerBoardPos.y + 75, 15, 100 });
+	Text->setText("Your board");
+
+	m_Panel.autoSize();
 }
 
 
@@ -38,22 +48,25 @@ CGameUi::~CGameUi()
 {
 }
 
+bool CGameUi::isCompleted() const
+{
+	return m_Completed;
+}
+
 void CGameUi::run()
 {
-	if(m_Controller)
-		m_Controller->run();
+	m_Controller->run();
+	m_Panel.update();
 }
 
 void CGameUi::handleInput(sf::Event Event)
 {
-	if (!m_Preset)
-		return;
-
+	m_Panel.handleInput(Event);
 	if (Event.type == sf::Event::MouseMoved)
 	{
 		for (unsigned i = 0; i < m_Enemies.size(); i++)
 		{
-			m_CurrentTile = CInterfaceUtils::getTilePos({ m_Preset->getBoardSize().first, m_Preset->getBoardSize().second }, m_Preset->getBasicAssets().m_TileSize, m_PlayerHelperPos + sf::Vector2i(i * 300, 0), { Event.mouseMove.x, Event.mouseMove.y });
+			m_CurrentTile = CInterfaceUtils::getTilePos({ m_PlayerBoard->getField().getWidth(), m_PlayerBoard->getField().getHeight() }, m_GameResources.m_TileSize, m_PlayerHelperPos + sf::Vector2i(i * 300, 0), { Event.mouseMove.x, Event.mouseMove.y });
 			if (m_CurrentTile)
 			{
 				m_CurrentEnemy = m_Enemies[i];
@@ -73,19 +86,11 @@ void CGameUi::handleInput(sf::Event Event)
 
 void CGameUi::draw(sf::RenderTarget & Target, sf::RenderStates States) const
 {
-	if (!m_Controller || !m_Preset)
-		return;
-	// if m_Controller has startd
-	// continue
-	CInterfaceUtils::drawField(Target, States, *m_Preset, m_PlayerBoard->getField(), m_PlayerBoardPos, {});
-	//CInterfaceUtils::drawShips(Target, States, *m_Preset, m_PlayerBoard->getShips(), m_PlayerBoardPos);
+	Target.draw(m_Panel, States);
+	Target.draw(m_Panel, States);
+	CInterfaceUtils::drawField(Target, States, m_GameResources, m_PlayerBoard->getField(), m_PlayerBoardPos, {});
 	for (unsigned i = 0; i < m_Enemies.size(); i++)
-	{
-		CInterfaceUtils::drawField(Target, States, *m_Preset, *m_Player->getEnemyField(m_Enemies[i]), m_PlayerHelperPos + sf::Vector2i(i * 300, 0), m_Enemies[i] == m_CurrentEnemy ? m_CurrentTile : std::optional<sf::Vector2i>());
-		//CInterfaceUtils::drawShips(Target, States, *m_Preset, m_Player->getEnemyField(m_Enemies[i])->m_DestroyedShips, m_PlayerHelperPos + sf::Vector2i(i * 300, 0));
-	}
-
-	Target.draw(m_VictoryInfo);
+		CInterfaceUtils::drawField(Target, States, m_GameResources, *m_Player->getEnemyField(m_Enemies[i]), m_PlayerHelperPos + sf::Vector2i(i * 300, 0), m_Enemies[i] == m_CurrentEnemy ? m_CurrentTile : std::optional<sf::Vector2i>());
 }
 
 void CGameUi::playSound(const sf::SoundBuffer & Buffer)
@@ -105,10 +110,10 @@ void CGameUi::onEvent(const CGameEvent & Event)
 		switch (Event.m_PlayerAttackedEvent.m_State)
 		{
 		case CTile::CState::HIT:
-			playSound(m_Preset->getBasicAssets().m_SndHit);
+			playSound(m_GameResources.m_SndHit);
 			break;
 		case CTile::CState::MISS:
-			playSound(m_Preset->getBasicAssets().m_SndMiss);
+			playSound(m_GameResources.m_SndMiss);
 			break;
 		}
 
@@ -118,25 +123,23 @@ void CGameUi::onEvent(const CGameEvent & Event)
 		if (Event.m_PlayerLostEvent.m_Loser != m_Player)
 			break;
 		
-		m_VictoryInfo.setString("przegra³eœ XD");
-		playSound(m_Preset->getBasicAssets().m_SndVictory);
+		m_VictoryText->setText("You lost XD");
+		playSound(m_GameResources.m_SndVictory);
+		m_ExitButton->setTitle("Exit");
 		break;
 	case CType::GAME_FINISHED:
 		if (Event.m_GameFinishedEvent.m_Winner == m_Player)
 		{
-			m_VictoryInfo.setString("wygra³eœ");
-			playSound(m_Preset->getBasicAssets().m_SndVictory);
+			m_VictoryText->setText("You won");
+			playSound(m_GameResources.m_SndVictory);
 		}
+		m_ExitButton->setTitle("Exit");
 		break;
 	}
 }
 
 void CGameUi::onEvent(IControl * Control, int Id)
 {
-	/*if (m_Designer.getBoard().isReady())
-	{
-		m_PlayerBoard = m_Controller->seat(&m_Player, std::move(m_Designer.getBoard()));
-		m_BuildPhase = false;
-		m_Controller->start();
-	}*/
+	if (Control == m_ExitButton && Id == CButton::CEvent::PRESSED)
+		m_Completed = true;
 }

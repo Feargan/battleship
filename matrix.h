@@ -10,6 +10,8 @@
 template<typename T>
 class CMatrix
 {
+public:
+	using ElementType = T;
 private:
 	T** m_Array;
 	int m_BaseWidth;
