@@ -61,7 +61,7 @@ void CButton::handleInput(sf::Event Event)
             m_Hover = false;
     }
     else if(Event.type == sf::Event::MouseButtonPressed && Event.mouseButton.button == sf::Mouse::Button::Left
-       && getPanel()->GetCurrentFocus() == this)
+       && getPanel()->getCurrentFocus() == this)
     {
         m_Held = true;
     }

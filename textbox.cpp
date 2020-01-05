@@ -71,13 +71,13 @@ void CTextbox::update()
 void CTextbox::handleInput(sf::Event Event)
 {
     if(Event.type == sf::Event::MouseButtonPressed && Event.mouseButton.button == sf::Mouse::Button::Left
-       && getPanel()->GetCurrentFocus() == this)
+       && getPanel()->getCurrentFocus() == this)
     {
         m_Active = true;
 		event(Event::PRESSED);
     }
     else if(Event.type == sf::Event::MouseButtonPressed && Event.mouseButton.button == sf::Mouse::Button::Left
-            && getPanel()->GetCurrentFocus() != this)
+            && getPanel()->getCurrentFocus() != this)
     {
         m_Active = false;
     }

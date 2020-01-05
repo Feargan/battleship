@@ -4,8 +4,6 @@
 
 #include <SFML/Graphics.hpp>
 
-#include <iostream>
-
 class CProgram
 {
     int m_WindowWidth;
@@ -17,7 +15,6 @@ class CProgram
 	CUiResources m_UiResources;
 public:
     CProgram(){}
-    void loadConfig(const char* File);
     bool init();
     void run();
 };

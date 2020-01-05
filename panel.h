@@ -15,10 +15,6 @@ class CPanel : public sf::Drawable
     std::vector<IControl*> m_Controls;
     IControl* m_Focus;
     IControl* m_Released;
-	bool m_VScrollbar;
-	int m_VScrollPos;
-	bool m_HScrollbar;
-	int m_HScrollPos;
 public:
 	CPanel(const sf::Rect<int>& Area = { 0, 0, 1, 1 });
 	~CPanel();
@@ -34,8 +30,6 @@ public:
 	void setPosition(sf::Vector2i Pos);
 	sf::Vector2i getPosition() const;
 	void autoSize();
-	void setVScrollbar(bool Enable = true); //
-	void setHScrollbar(bool Enable = true); //
 
     void addControl(ControlKey Key, IControl* Control);
     void deleteControl(ControlKey Key, IControl* Control);
@@ -45,8 +39,8 @@ public:
 
 	void update();
 
-    IControl* GetCurrentFocus(){return m_Focus;}
-    IControl* GetLastReleased(){return m_Released;}
+	const IControl* getCurrentFocus() const;
+	const IControl* getLastReleased() const;
 
 private:
     virtual void draw(sf::RenderTarget& Target, sf::RenderStates states) const override;

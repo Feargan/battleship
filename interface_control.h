@@ -20,12 +20,12 @@ public:
 		IEventListener(IEventListener&& r) = delete;
 		IEventListener& operator=(IEventListener&& r) = delete;
 	};
-protected:
-	//sf::Rect<int> m_Pos;
 private:
     CPanel* m_Panel;
 	std::vector<IEventListener*> m_Listeners;
 	sf::Rect<int> m_Pos;
+//protected:
+//	CPanel* getPanel();
 public:
     IControl(CPanel* Panel);
     virtual ~IControl();
@@ -34,7 +34,7 @@ public:
 	IControl(IControl&& r) = delete;
 	IControl& operator=(IControl&& r) = delete;
 
-    CPanel* getPanel(){return m_Panel;}
+	const CPanel* getPanel() const;
 
 	void setPosition(const sf::Rect<int>& Pos);
 	const sf::Rect<int>& getPosition() const;

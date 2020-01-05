@@ -20,11 +20,18 @@ private:
 	int m_Height;
 	CRotation m_Rotation;
 public:
+	/*
+		creates a matrix of an unspecified size
+	*/
 	CMatrix()
-		: m_BaseWidth(0), m_BaseHeight(0), m_Array(nullptr), m_Rotation(CRotation::CValue::NONE)
+		: m_BaseWidth(0), m_BaseHeight(0), m_Array(nullptr), m_Height(0), m_Width(0), m_Rotation(CRotation::CValue::NONE)
 	{
 		rotate(CRotation::CDir::NONE);
 	}
+	/*
+		creates a matrix of the size specified by the parameters
+		throws std::bad_alloc() if the given size is incorrect or a general memory allocation failure occurs
+	*/
 	CMatrix(int Width, int Height)
 		: m_BaseWidth(Width), m_BaseHeight(Height), m_Rotation(CRotation::CValue::NONE)
 	{
@@ -37,65 +44,47 @@ public:
 	{
 		free();
 	}
-
-	operator bool() const { return static_cast<bool>(m_Array); }
-
-	// copy constructor/assignment
 	CMatrix(const CMatrix& r)
-		: m_BaseWidth(r.m_BaseWidth), m_BaseHeight(r.m_BaseHeight), m_Rotation(r.m_Rotation), m_Width(r.m_Width), m_Height(r.m_Height)
+		: m_BaseWidth(r.m_BaseWidth), m_BaseHeight(r.m_BaseHeight), m_Rotation(r.m_Rotation),
+		  m_Width(r.m_Width), m_Height(r.m_Height)
 	{
 		alloc();
 		for (int i = 0; i < m_BaseWidth; i++)
 			for (int j = 0; j < m_BaseHeight; j++)
 				m_Array[i][j] = r.m_Array[i][j];
 	}
-	CMatrix& operator=(const CMatrix& r) // !!FIX OPTIMIZATION!!
+	CMatrix& operator=(CMatrix r)
 	{
-		CMatrix other(r);
-		std::swap(*this, other);
+		swap(*this, r);
 		return *this;
 	}
-	// move constructor/assignment
 	CMatrix(CMatrix&& r)
-		: m_BaseWidth(r.m_BaseWidth), m_BaseHeight(r.m_BaseHeight), m_Rotation(r.m_Rotation), m_Width(r.m_Width), m_Height(r.m_Height), m_Array(r.m_Array)
+		: CMatrix()
 	{
-		r.m_Array = nullptr;
-		/*r.m_BaseHeight = 0;
-		r.m_BaseWidth = 0;
-		r.m_Width = 0;
-		r.m_Height = 0;*/
+		swap(*this, r);
 	}
-	CMatrix& operator=(CMatrix&& r)
+	friend void swap(CMatrix& l, CMatrix& r)
 	{
-		free();
-		m_Array = r.m_Array;
-		m_BaseHeight = r.m_BaseHeight;
-		m_BaseWidth = r.m_BaseWidth;
-		m_Height = r.m_Height;
-		m_Width = r.m_Width;
-		m_Rotation = r.m_Rotation;
-
-		r.m_Array = nullptr;
-		/*r.m_BaseHeight = 0;
-		r.m_BaseWidth = 0;
-		r.m_Width = 0;
-		r.m_Height = 0;*/
-		return *this;
+		using std::swap;
+		swap(l.m_Array, r.m_Array);
+		swap(l.m_BaseHeight, r.m_BaseHeight);
+		swap(l.m_BaseWidth, r.m_BaseWidth);
+		swap(l.m_Height, r.m_Height);
+		swap(l.m_Width, r.m_Width);
+		swap(l.m_Rotation, r.m_Rotation);
 	}
 
-	void insert(int x, int y, const CMatrix & other)
-	{
-
-	}
-	void move(int x, int y, CMatrix& other)
-	{
-
-	}
+	/*
+		rotates in a direction affecting the matrix width and height
+	*/
 	void rotate(CRotation::CDir Dir)
 	{
 		m_Rotation += Dir;
 		setRotation(m_Rotation);
 	}
+	/*
+		forcefully sets a rotation affecting the matrix width and height
+	*/
 	void setRotation(CRotation Rotation)
 	{
 		m_Rotation = Rotation;
@@ -115,15 +104,25 @@ public:
 		return m_Rotation;
 	}
 
+	/* 
+		returns the matrix width depending on the current rotation
+	*/
 	int getWidth() const
 	{
 		return m_Width;
 	}
+	/*
+		returns the matrix height depending on the current rotation
+	*/
 	int getHeight() const
 	{
 		return m_Height;
 	}
 
+	/* 
+		return a reference to element at (x,y)
+		throws std::out_of_range()
+	*/
 	T& at(int x, int y)
 	{
 		evaluate(x, y);
@@ -131,6 +130,10 @@ public:
 			throw std::out_of_range("CMatrix::at(" + std::to_string(x) + ", " + std::to_string(y) + ")");
 		return m_Array[x][y];
 	}
+	/* 
+		return const a reference to the element at (x,y)
+		throws std::out_of_range()
+	*/
 	const T& at(int x, int y) const
 	{
 		evaluate(x, y);
@@ -138,6 +141,7 @@ public:
 			throw std::out_of_range("CMatrix::at(" + std::to_string(x) + ", " + std::to_string(y) + ") const");
 		return m_Array[x][y];
 	}
+	/* returns a reference to the element at (x,y) */
 	T& operator[](const std::pair<int, int>& p) noexcept
 	{
 		int x = p.first;
@@ -145,6 +149,9 @@ public:
 		evaluate(x, y);
 		return m_Array[x][y];
 	}
+	/* 
+		returns a const reference to the element at (x,y)
+	*/
 	const T& operator[](const std::pair<int,  int>& p) const noexcept
 	{
 		int x = p.first;
@@ -152,6 +159,15 @@ public:
 		evaluate(x, y);
 		return m_Array[x][y];
 	}
+	/* 
+		returns true if the array was allocated, false otherwise
+	*/
+	operator bool() const { return static_cast<bool>(m_Array); }
+	/*
+		sets the element at (x,y)
+		can be used to move an object into the array
+		throws std::out_of_range()
+	*/
 	template<typename U> void set(int x, int y, U&& v)
 	{
 		static_assert(std::is_same<typename std::remove_reference<U>::type, T>::value, "CMatrix<T>::set<U>(): template typenames do not match");
@@ -160,6 +176,9 @@ public:
 			throw std::out_of_range("CMatrix::set(" + std::to_string(x) + ", " + std::to_string(y) + ")");
 		m_Array[x][y] = std::forward<U>(v);
 	}
+	/*
+		fills the array with v when the predicate returns true
+	*/
 	void fill(const T& v, std::function<bool(const T& c)> pred = [](const T& v) -> bool { return true; })
 	{
 		for (int i = 0; i < m_BaseWidth; i++)
@@ -167,6 +186,9 @@ public:
 				if (pred(m_Array[i][j]))
 					m_Array[i][j] = T(v);
 	}
+	/*
+		crops or extends the array filling new rows and columns with a default value
+	*/
 	void resize(int x, int y, const T& d = T())
 	{
 		CMatrix m(x, y);
@@ -175,22 +197,11 @@ public:
 		for (int i = 0; i < m.getWidth() && i < getWidth(); i++)
 			for (int j = 0; j < m.getHeight() && j < getHeight(); j++)
 				m[{i, j}] = this->operator[]({ i,j });
-		std::swap(*this, m);
+		swap(*this, m);
 	}
-	/*void fill(const T& v)
-	{
-		fill_if(v, [](const T& v) -> bool { return true; });
-		//for (unsigned int i = 0; i < m_BaseWidth; i++)
-		//	for (unsigned int j = 0; j < m_BaseHeight; j++)
-		//		m_Array[i][j] = T(v);
-	}
-	void fill_if(const T& v, std::function<bool(const T& c)> pred)
-	{
-		for (unsigned int i = 0; i < m_BaseWidth; i++)
-			for (unsigned int j = 0; j < m_BaseHeight; j++)
-				if (pred(m_Array[i][j]))
-					m_Array[i][j] = T(v);
-	}*/
+	/*
+		returns true if the point (x,y) is in range of the rotated array, false otherwise
+	*/
 	bool checkPoint(int x, int y) const
 	{
 		if (x >= m_Width || y >= m_Height || x < 0 || y < 0)
@@ -198,6 +209,9 @@ public:
 		return true;
 	}
 private:
+	/*
+		returns true if the point (x,y) is in range of the base array, false otherwise
+	*/
 	bool checkBasePoint(int x, int y) const
 	{
 		if (x >= m_BaseWidth || y >= m_BaseHeight || x < 0 || y < 0)
@@ -218,6 +232,9 @@ private:
 			delete[] m_Array[i];
 		delete[] m_Array;
 	}
+	/*
+		evaluate actual (x,y) point depending on the rotation
+	*/
 	void evaluate(int& x, int& y) const
 	{
 		using CValue = CRotation::CValue;

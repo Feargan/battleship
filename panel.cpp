@@ -120,6 +120,16 @@ void CPanel::update()
 	m_RenderTexture.display();
 }
 
+const IControl * CPanel::getCurrentFocus() const
+{
+	return m_Focus;
+}
+
+const IControl * CPanel::getLastReleased() const
+{
+	return m_Released;
+}
+
 void CPanel::draw(sf::RenderTarget& Target, sf::RenderStates States) const
 {
     /*for(IControl* Control : m_Controls)

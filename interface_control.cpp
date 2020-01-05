@@ -11,6 +11,11 @@ IControl::~IControl()
     m_Panel->deleteControl(CPanel::ControlKey(), this);
 }
 
+const CPanel * IControl::getPanel() const
+{
+	return m_Panel;
+}
+
 void IControl::setPosition(const sf::Rect<int>& Pos)
 {
 	m_Pos = Pos;

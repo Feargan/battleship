@@ -72,7 +72,7 @@ void CSlider::setValue(int Value)
 
 void CSlider::handleInput(sf::Event Event)
 {
-	if (getPanel()->GetCurrentFocus() == this)
+	if (getPanel()->getCurrentFocus() == this)
 	{
 		m_Hover = false;
 		int x;

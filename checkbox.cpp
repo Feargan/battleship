@@ -23,14 +23,14 @@ void CCheckBox::handleInput(sf::Event Event)
 		}
 	}
 	else if (Event.type == sf::Event::MouseButtonPressed && Event.mouseButton.button == sf::Mouse::Button::Left
-		&& getPanel()->GetCurrentFocus() == this && !m_Lock)
+		&& getPanel()->getCurrentFocus() == this && !m_Lock)
 	{
 		m_Held = !m_Held;
 
 		m_Lock = true;
 		event(PRESSED);
 	}
-	else if (Event.type == sf::Event::MouseButtonReleased && Event.mouseButton.button == sf::Mouse::Button::Left && getPanel()->GetLastReleased() == this)
+	else if (Event.type == sf::Event::MouseButtonReleased && Event.mouseButton.button == sf::Mouse::Button::Left && getPanel()->getLastReleased() == this)
 	{
 		m_Lock = false;
 	}
