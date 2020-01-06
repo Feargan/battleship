@@ -18,6 +18,8 @@ class CPanel : public sf::Drawable
 public:
 	CPanel(const sf::Rect<int>& Area = { 0, 0, 1, 1 });
 	~CPanel();
+	CPanel(const CPanel&) = delete;
+	CPanel(CPanel&&) = delete;
 
     class ControlKey
     {

@@ -39,6 +39,7 @@ void CCheckBox::handleInput(sf::Event Event)
 void CCheckBox::setState(bool Enable)
 {
 	m_Held = Enable;
+	m_Hover = m_Held;
 }
 
 bool CCheckBox::getState() const

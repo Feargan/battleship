@@ -20,11 +20,13 @@ CGameBoard::CGameBoard(const CGameBoard & r)
 	: m_Field(r.m_Field)
 {
 	std::unordered_map <std::shared_ptr<const CShip>, std::shared_ptr<CShip>> Remap;
+	// copy values and make new pointers
 	for (auto& s : r.m_Ships)
 	{
-		m_Ships.emplace_back(new CShip(*s));
-		Remap[s] = m_Ships.back();
+		m_Ships.emplace_back(std::make_shared<CShip>(*s));
+		Remap[s] = m_Ships.back(); // tiles with the same old address will obtain this new pointer
 	}
+	// remap all tiles that have old instances
 	for (int i = 0; i < m_Field.getWidth(); i++)
 	{
 		for (int j = 0; j < m_Field.getHeight(); j++)
@@ -35,6 +37,7 @@ CGameBoard::CGameBoard(const CGameBoard & r)
 		}
 	}
 }
+
 CGameBoard& CGameBoard::operator=(const CGameBoard& r)
 {
 	CGameBoard s(r);
@@ -64,6 +67,7 @@ bool CGameBoard::canAttack(int x, int y)
 
 bool CGameBoard::destroyed() const
 {
+	// all ships must be destroyed
 	for (const auto &s : m_Ships)
 		if (!s->isDestroyed())
 			return false;

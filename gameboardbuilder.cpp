@@ -24,7 +24,6 @@ void CGameBoardBuilder::rebuild()
 
 bool CGameBoardBuilder::canPlace(int x, int y) const
 {
-	// check collisions
 	if (!m_Field.checkPoint(x, y))
 		return false;
 	auto TileState = m_Field[{x, y}].getState();
@@ -52,6 +51,7 @@ void CGameBoardBuilder::remove(int x, int y)
 {
 	if (!m_Field.checkPoint(x, y))
 		return;
+	// check if the tile is a part of the ship which is being built
 	const CTile* RemovedTile = &m_Field[{x, y}];
 	auto It = std::find_if(m_NewShip.begin(), m_NewShip.end(),
 		[this, RemovedTile](const std::pair<int, int>& p)
@@ -60,23 +60,30 @@ void CGameBoardBuilder::remove(int x, int y)
 			return true;
 		return false;
 	});
+	// if it's not the part of our new ship, perhaps it's a ship that was built previously?
 	if (It == m_NewShip.end())
 	{
 		removeShip(x, y);
+		// perhaps some room for us has appeared?
 		surround(m_NewShip, true, CState::RESERVED, false);
 		return;
 	}
+	// check if we can remove the tile without dissolving it into two or more separated ships
 	CTileSet Next, Visited;
+	// start searching
 	getNeighbours(x, y, Next, true, [](const CTile& Tile)->bool {return Tile.getState() == CState::TAKEN;});
-	set(x, y, m_NewShip.size() > 1 ? CState::RESERVED : CState::EMPTY); // temporarily unlink tree
+	// temporarily unlink from our "tree" to simulate the situation
+	set(x, y, m_NewShip.size() > 1 ? CState::RESERVED : CState::EMPTY);
 	if (Next.size())
 	{
+		// start from one of possible branches
 		auto p = *Next.begin();
 		Next.clear();
 		Next.insert(p);
 	}
 	while (Next.size())
 	{
+		// visit all tiles in the selected branch
 		auto PairIt = Next.begin();
 		Visited.insert(*PairIt);
 		CTileSet New;
@@ -90,6 +97,8 @@ void CGameBoardBuilder::remove(int x, int y)
 	}
 	if (Visited.size() != m_NewShip.size() - 1)
 	{
+		// if we didn't visit all tiles belonging to the new ship, it would be cut into pieces, which breaks the rules
+		// restore state
 		set(x, y, CState::TAKEN);
 		return;
 	}
@@ -103,9 +112,11 @@ void CGameBoardBuilder::removeShip(int x, int y)
 {
 	if (!m_Field.checkPoint(x, y))
 		return;
+	// check if there is a placed ship
 	auto Owner = m_Field[{x, y}].getOwner();
 	if (!Owner)
 		return;
+	// find it in our container
 	auto It = std::find_if(m_Ships.begin(), m_Ships.end(),
 		[Owner](const std::shared_ptr<CShip>& s) -> bool
 	{
@@ -113,39 +124,50 @@ void CGameBoardBuilder::removeShip(int x, int y)
 			return true;
 		return false;
 	});
+	// find all tiles pointing to the ship
 	CTileSet CheckErase;
+	int Health = Owner->getHealth();
 	for (int i = 0; i < m_Field.getWidth(); i++)
 	{
 		for (int j = 0; j < m_Field.getHeight(); j++)
 		{
 			if (m_Field[{i, j}].getOwner() == Owner)
 			{
-				//m_Field[{i, j}] = CState::EMPTY;
+				// erase tile
 				set(i, j, CState::EMPTY);
 				CheckErase.insert({ i,j });
 			}
 		}
 	}
+	// remove all "missed" tiles that do not belong to any other ship
 	surround(CheckErase, false, CState::EMPTY, true, [](const CTile &t)->bool { return t.getState() == CState::MISS; }, [](const CTile &t)->bool { return t.getState() == CState::TAKEN && t.getOwner(); });
 	if (It != m_Ships.end())
 	{
-		m_ShipCounters[Owner->getHealth() - 1]--;
+		// decrease counter
+		m_ShipCounters[Health - 1]--;
 		m_Ships.erase(It);
 	}
 }
 
 bool CGameBoardBuilder::commit()
 {
+	// can't commit oversized ships
 	if (!m_NewShip.size())
 		return false;
+	// make an instance
 	m_Ships.emplace_back(std::make_shared<CShip>()); //CShip::CMeta{ *m_NewShip.begin(), CRotation::CValue::NONE, m_NewShip.size() }
 	auto& Ship = m_Ships.back();
+	// bind all newly placed tiles to that instance
 	for (auto p : m_NewShip)
 		m_Field[p] = CTile(Ship);
+	// reserve neighbour tiles to prevent from placing other ships too close
 	surround(m_NewShip, false, CState::MISS, false);
+	// increase counter
 	m_ShipCounters[m_NewShip.size() - 1]++;
+	// did we exceed our limit?
 	if (static_cast<int>(m_NewShip.size()) > m_Preset->getMaxShipSize() || m_ShipCounters[m_NewShip.size() - 1] > m_Preset->getShipAmount(m_NewShip.size()))
 	{
+		// if so remove the ship
 		auto p = *m_NewShip.begin();
 		removeShip(p.first, p.second);
 		m_NewShip.clear();
@@ -157,12 +179,14 @@ bool CGameBoardBuilder::commit()
 void CGameBoardBuilder::autoFill()
 {
 	int BoardWidth = m_Field.getWidth();
+	// cleanup before we begin
 	commit();
 
 	CTileSet Vitrified;
-
+	// generate for all sizes
 	for (int n = 1; n <= static_cast<int>(m_ShipCounters.size()); n++)
 	{
+		// 
 		while (remaining(n) > 0)
 		{
 			if (!m_Empty)

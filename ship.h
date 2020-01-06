@@ -3,8 +3,6 @@
 #include "matrix.h"
 #include "tile.h"
 
-#include <vector>
-
 class CShip
 {
 	int m_Health;

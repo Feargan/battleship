@@ -15,10 +15,26 @@ CTile::CTile(const std::shared_ptr<CShip>& Owner)
 	m_State = CState::TAKEN;
 }
 
+CTile::CTile(const CTile & r) : m_Owner(r.m_Owner), m_State(r.m_State)
+{
+
+}
+
+CTile::CTile(CTile&& r) : CTile()
+{
+	swap(*this, r);
+}
+
+CTile& CTile::operator=(CTile r)
+{
+	swap(*this, r);
+	return *this;
+}
+
 CTile::~CTile()
 {
-	/*if(m_Owner)
-		m_Owner->decreaseHealth();*/
+	if(m_Owner)
+		m_Owner->decreaseHealth();
 }
 
 CTile::CState CTile::getState() const
@@ -64,4 +80,11 @@ CTile::CState CTile::attack()
 		break;
 	}
 	return m_State;
+}
+
+void swap(CTile & l, CTile & r)
+{
+	using std::swap;
+	swap(l.m_Owner, r.m_Owner);
+	swap(l.m_State, r.m_State);
 }
