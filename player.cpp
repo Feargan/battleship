@@ -20,6 +20,11 @@ const std::string & IPlayer::getName() const
 	return m_Name;
 }
 
+const IGameController * IPlayer::getController() const
+{
+	return m_Controller;
+}
+
 IGameController * IPlayer::getController()
 {
 	return m_Controller;

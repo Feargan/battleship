@@ -16,6 +16,7 @@ public:
 		HIT,
 		DESTROYED,
 		TAKEN,
+
 		RESERVED,	// helper state for the builder, marks tiles which can be taken by an uncommitted ship
 		VITRIFIED,	// helper state for the builder, treated as "impossible to occupy for these sizes of ships"
 	};
@@ -36,9 +37,18 @@ public:
 	CState getState() const;
 	void setState(CState State);
 
+	/*
+		sets the instance of a ship
+	*/
 	void setOwner(const std::shared_ptr<CShip>& Owner);
+	/*
+		returns the instance of a ship
+	*/
 	const std::shared_ptr<CShip>& getOwner() const;
 
+	/*
+		performs an attack changing its state depending on m_Owner and m_State
+	*/
 	CState attack();
 };
 

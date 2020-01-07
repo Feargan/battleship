@@ -87,22 +87,26 @@ void CGameBoardBuilder::remove(int x, int y)
 		auto PairIt = Next.begin();
 		Visited.insert(*PairIt);
 		CTileSet New;
+		// find next possible paths
 		getNeighbours(PairIt->first, PairIt->second, New, true, [](const CTile& Tile)->bool {return Tile.getState() == CState::TAKEN;});
 		for (auto& p : New)
 		{
+			// add only unvisited paths
 			if (Visited.find(p) == Visited.end())
 				Next.insert(p);
 		}
+		// continue search until exhausting all possible paths
 		Next.erase(PairIt);
 	}
 	if (Visited.size() != m_NewShip.size() - 1)
 	{
-		// if we didn't visit all tiles belonging to the new ship, it would be cut into pieces, which breaks the rules
+		// if we didn't visit all tiles belonging to the new ship, it would be cut into pieces after the removal, we don't want that
 		// restore state
 		set(x, y, CState::TAKEN);
 		return;
 	}
 	m_NewShip.erase(It);
+	// remove unassociated RESERVED tiles
 	CTileSet Unreserve;
 	Unreserve.insert({ x,y });
 	surround(Unreserve, true, CState::EMPTY, true);
@@ -124,7 +128,7 @@ void CGameBoardBuilder::removeShip(int x, int y)
 			return true;
 		return false;
 	});
-	// find all tiles pointing to the ship
+	// find all tiles pointing to the ship, store their positions and reset their states to EMPTY
 	CTileSet CheckErase;
 	int Health = Owner->getHealth();
 	for (int i = 0; i < m_Field.getWidth(); i++)
@@ -133,13 +137,12 @@ void CGameBoardBuilder::removeShip(int x, int y)
 		{
 			if (m_Field[{i, j}].getOwner() == Owner)
 			{
-				// erase tile
 				set(i, j, CState::EMPTY);
 				CheckErase.insert({ i,j });
 			}
 		}
 	}
-	// remove all "missed" tiles that do not belong to any other ship
+	// remove all MISSED tiles that do not belong to any other ship
 	surround(CheckErase, false, CState::EMPTY, true, [](const CTile &t)->bool { return t.getState() == CState::MISS; }, [](const CTile &t)->bool { return t.getState() == CState::TAKEN && t.getOwner(); });
 	if (It != m_Ships.end())
 	{
@@ -189,10 +192,13 @@ void CGameBoardBuilder::autoFill()
 		// 
 		while (remaining(n) > 0)
 		{
+			// cancel autofill if there are no empty tiles left
 			if (!m_Empty)
 				break;
 
+			// calculate tiles needed to copmletely build the ship
 			int RemainingTiles = n - 1;
+			// randomize the first position and place a tile
 			int Index = rand() % m_Empty + 1;
 			int i;
 			for (i = 0; Index > 0; i++)
@@ -203,13 +209,16 @@ void CGameBoardBuilder::autoFill()
 			i--;
 			int x = i % BoardWidth, y = i / BoardWidth;
 			place(x, y);
+			// randomize next positions
 			CTileSet Reserved;
 			while (RemainingTiles)
 			{
+				// get next possible positions and break if there are not enough
 				getNeighbours(x, y, Reserved, true, [](const CTile &t)->bool { return t.getState() == CTile::CState::RESERVED;});
 				if (!Reserved.size())
 					break;
 				RemainingTiles--;
+				// randomize a reserved tile and place it
 				int Next = rand() % Reserved.size();
 				auto It = Reserved.begin();
 				for (; Next > 0; Next--)
@@ -219,9 +228,11 @@ void CGameBoardBuilder::autoFill()
 				place(x, y);
 				Reserved.erase({ x,y });
 			}
+			// check if commit failed
 			CTileSet NextVitrify = m_NewShip;
 			if (!commit())
 			{
+				// temporarily vitrify the tiles so that they won't be used in next retries
 				for (auto p : NextVitrify)
 				{
 					set(p.first, p.second, CState::VITRIFIED);
@@ -232,6 +243,7 @@ void CGameBoardBuilder::autoFill()
 		if (!m_Empty)
 			break;
 	}
+	// restore empty states for vitrified tiles
 	for (auto p : Vitrified)
 	{
 		set(p.first, p.second, CState::EMPTY);
@@ -242,6 +254,7 @@ bool CGameBoardBuilder::isReady() const
 {
 	if (m_Preset->getMaxShipSize() != m_ShipCounters.size())
 		return false;
+	// compare counters - check remaining
 	for (unsigned int i = 0; i < m_ShipCounters.size(); i++)
 	{
 		if (m_ShipCounters[i] != m_Preset->getShipAmount(i + 1))
@@ -309,7 +322,7 @@ void CGameBoardBuilder::set(int x, int y, CState State)
 	m_Field[{x, y}] = State;
 }
 
-void CGameBoardBuilder::surround(CTileSet & Set, bool Strict, CState State, bool CheckAssociation, std::function<bool(const CTile&)> Pred, std::function<bool(const CTile&)> AscPred)
+void CGameBoardBuilder::surround(const CTileSet & Set, bool Strict, CState State, bool CheckAssociation, std::function<bool(const CTile&)> Pred, std::function<bool(const CTile&)> AscPred)
 {
 	CTileSet Reserve;
 	for (auto p : Set)
