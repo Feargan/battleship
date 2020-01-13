@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-CGameBoardBuilder::CGameBoardBuilder(const CGamePreset* Preset) : m_Preset(Preset), m_Field(m_Board.m_Field), m_Ships(m_Board.m_Ships)
+CGameBoardBuilder::CGameBoardBuilder(const CGamePreset* Preset) : m_Preset(Preset)
 {
 	if (!m_Preset)
 		return;
@@ -24,9 +24,9 @@ void CGameBoardBuilder::rebuild()
 
 bool CGameBoardBuilder::canPlace(int x, int y) const
 {
-	if (!m_Field.checkPoint(x, y))
+	if (!m_Board.m_Field.checkPoint(x, y))
 		return false;
-	auto TileState = m_Field[{x, y}].getState();
+	auto TileState = m_Board.m_Field[{x, y}].getState();
 	int NumTiles = static_cast<int>(m_NewShip.size());
 	if (NumTiles >= m_Preset->getMaxShipSize())
 		return false;
@@ -49,14 +49,14 @@ bool CGameBoardBuilder::place(int x, int y)
 
 void CGameBoardBuilder::remove(int x, int y)
 {
-	if (!m_Field.checkPoint(x, y))
+	if (!m_Board.m_Field.checkPoint(x, y))
 		return;
 	// check if the tile is a part of the ship which is being built
-	const CTile* RemovedTile = &m_Field[{x, y}];
+	const CTile* RemovedTile = &m_Board.m_Field[{x, y}];
 	auto It = std::find_if(m_NewShip.begin(), m_NewShip.end(),
 		[this, RemovedTile](const std::pair<int, int>& p)
 	{
-		if (&m_Field[p] == RemovedTile)
+		if (&m_Board.m_Field[p] == RemovedTile)
 			return true;
 		return false;
 	});
@@ -114,6 +114,7 @@ void CGameBoardBuilder::remove(int x, int y)
 
 void CGameBoardBuilder::removeShip(int x, int y)
 {
+	auto &m_Field = m_Board.m_Field;
 	if (!m_Field.checkPoint(x, y))
 		return;
 	// check if there is a placed ship
@@ -121,7 +122,7 @@ void CGameBoardBuilder::removeShip(int x, int y)
 	if (!Owner)
 		return;
 	// find it in our container
-	auto It = std::find_if(m_Ships.begin(), m_Ships.end(),
+	auto It = std::find_if(m_Board.m_Ships.begin(), m_Board.m_Ships.end(),
 		[Owner](const std::shared_ptr<CShip>& s) -> bool
 	{
 		if (Owner == s)
@@ -144,11 +145,11 @@ void CGameBoardBuilder::removeShip(int x, int y)
 	}
 	// remove all MISSED tiles that do not belong to any other ship
 	surround(CheckErase, false, CState::EMPTY, true, [](const CTile &t)->bool { return t.getState() == CState::MISS; }, [](const CTile &t)->bool { return t.getState() == CState::TAKEN && t.getOwner(); });
-	if (It != m_Ships.end())
+	if (It != m_Board.m_Ships.end())
 	{
 		// decrease counter
 		m_ShipCounters[Health - 1]--;
-		m_Ships.erase(It);
+		m_Board.m_Ships.erase(It);
 	}
 }
 
@@ -158,11 +159,11 @@ bool CGameBoardBuilder::commit()
 	if (!m_NewShip.size())
 		return false;
 	// make an instance
-	m_Ships.emplace_back(std::make_shared<CShip>()); //CShip::CMeta{ *m_NewShip.begin(), CRotation::CValue::NONE, m_NewShip.size() }
-	auto& Ship = m_Ships.back();
+	m_Board.m_Ships.emplace_back(std::make_shared<CShip>()); //CShip::CMeta{ *m_NewShip.begin(), CRotation::CValue::NONE, m_NewShip.size() }
+	auto& Ship = m_Board.m_Ships.back();
 	// bind all newly placed tiles to that instance
 	for (auto p : m_NewShip)
-		m_Field[p] = CTile(Ship);
+		m_Board.m_Field[p] = CTile(Ship);
 	// reserve neighbour tiles to prevent from placing other ships too close
 	surround(m_NewShip, false, CState::MISS, false);
 	// increase counter
@@ -181,7 +182,7 @@ bool CGameBoardBuilder::commit()
 }
 void CGameBoardBuilder::autoFill()
 {
-	int BoardWidth = m_Field.getWidth();
+	int BoardWidth = m_Board.m_Field.getWidth();
 	// cleanup before we begin
 	commit();
 
@@ -203,7 +204,7 @@ void CGameBoardBuilder::autoFill()
 			int i;
 			for (i = 0; Index > 0; i++)
 			{
-				if (m_Field.at(i%BoardWidth, i / BoardWidth).getState() == CState::EMPTY)
+				if (m_Board.m_Field.at(i%BoardWidth, i / BoardWidth).getState() == CState::EMPTY)
 					Index--;
 			}
 			i--;
@@ -243,7 +244,7 @@ void CGameBoardBuilder::autoFill()
 		if (!m_Empty)
 			break;
 	}
-	// restore empty states for vitrified tiles
+	// restore EMPTY states for VITRIFIED tiles
 	for (auto p : Vitrified)
 	{
 		set(p.first, p.second, CState::EMPTY);
@@ -275,17 +276,17 @@ int CGameBoardBuilder::remaining(int Size) const
 
 void CGameBoardBuilder::clear()
 {
-	m_Field.fill(CState::EMPTY);
-	m_Empty = m_Field.getWidth()*m_Field.getHeight();
+	m_Board.m_Field.fill(CState::EMPTY);
+	m_Empty = m_Board.m_Field.getWidth()*m_Board.m_Field.getHeight();
 	m_ShipCounters.clear();
 	m_ShipCounters.resize(m_Preset->getMaxShipSize(), 0);
 	m_NewShip.clear();
-	m_Ships.clear();
+	m_Board.m_Ships.clear();
 }
 
 bool CGameBoardBuilder::isEmpty() const
 {
-	return m_Empty == m_Field.getHeight()*m_Field.getWidth();
+	return m_Empty == m_Board.m_Field.getHeight()*m_Board.m_Field.getWidth();
 }
 
 int CGameBoardBuilder::getEmpty() const
@@ -307,19 +308,19 @@ const CGamePreset * CGameBoardBuilder::getPreset() const
 
 const CGameBoard::CField & CGameBoardBuilder::getField() const
 {
-	return m_Field;
+	return m_Board.m_Field;
 }
 
 void CGameBoardBuilder::set(int x, int y, CState State)
 {
-	auto CurState = m_Field[{x, y}].getState();
+	auto CurState = m_Board.m_Field[{x, y}].getState();
 	if (CurState == State)
 		return;
 	if ((CurState != CState::TAKEN && CurState != CState::MISS && CurState != CState::VITRIFIED) && (State == CState::TAKEN || State == CState::MISS || State == CState::VITRIFIED))
 		m_Empty--;
 	else if ((CurState != CState::EMPTY && CurState != CState::RESERVED) && (State == CState::EMPTY || State == CState::RESERVED))
 		m_Empty++;
-	m_Field[{x, y}] = State;
+	m_Board.m_Field[{x, y}] = State;
 }
 
 void CGameBoardBuilder::surround(const CTileSet & Set, bool Strict, CState State, bool CheckAssociation, std::function<bool(const CTile&)> Pred, std::function<bool(const CTile&)> AscPred)
@@ -346,7 +347,7 @@ void CGameBoardBuilder::getNeighbours(int x, int y, CTileSet & Set, bool Strict,
 {
 	auto Add = [this, &Set, Pred](int x, int y) -> void
 	{
-		if (m_Field.checkPoint(x, y) && Pred(m_Field[{ x, y }]))
+		if (m_Board.m_Field.checkPoint(x, y) && Pred(m_Board.m_Field[{ x, y }]))
 			Set.insert({ x,y });
 	};
 	Add(x - 1, y);

@@ -1,7 +1,7 @@
 #include "player.h"
 
 
-IPlayer::IPlayer(IGameController* Controller) : IObserver()
+IPlayer::IPlayer(CGameController* Controller) : IObserver()
 {
 	m_Controller = Controller;
 }
@@ -20,12 +20,12 @@ const std::string & IPlayer::getName() const
 	return m_Name;
 }
 
-const IGameController * IPlayer::getController() const
+const CGameController * IPlayer::getController() const
 {
 	return m_Controller;
 }
 
-IGameController * IPlayer::getController()
+CGameController * IPlayer::getController()
 {
 	return m_Controller;
 }

@@ -7,7 +7,7 @@ const unsigned int CGameUi::MaxVoices;
 const sf::Vector2i CGameUi::PLAYER_BOARD_POS = sf::Vector2i{ 300, 50 };
 const sf::Vector2i CGameUi::HELPER_BOARD_POS = sf::Vector2i{ 300, 300 };
 
-CGameUi::CGameUi(IGameController* Controller, CIntelligentPlayer* Player, const CGameBoard* PlayerBoard, const CGameResources& GameResources, const CUiResources& UiResources)
+CGameUi::CGameUi(CGameController* Controller, CIntelligentPlayer* Player, const CGameBoard* PlayerBoard, const CGameResources& GameResources, const CUiResources& UiResources)
 	: m_Controller(Controller), m_NextVoice(0), m_Player(Player), m_PlayerBoard(PlayerBoard), m_GameResources(GameResources), m_PlayerBoardPos(PLAYER_BOARD_POS), m_PlayerHelperPos(HELPER_BOARD_POS), m_Completed(false)
 {
 	if (!m_Controller->isInProgress())
@@ -109,6 +109,7 @@ void CGameUi::onEvent(const CGameEvent & Event)
 	{
 		switch (Event.m_PlayerAttackedEvent.m_State)
 		{
+		case CTile::CState::DESTROYED:
 		case CTile::CState::HIT:
 			playSound(m_GameResources.m_SndHit);
 			break;
@@ -123,8 +124,8 @@ void CGameUi::onEvent(const CGameEvent & Event)
 		if (Event.m_PlayerLostEvent.m_Loser != m_Player)
 			break;
 		
-		m_VictoryText->setText("You lost XD");
-		playSound(m_GameResources.m_SndVictory);
+		m_VictoryText->setText("You lost");
+		//playSound(m_GameResources.m_SndVictory);
 		m_ExitButton->setTitle("Exit");
 		break;
 	case CType::GAME_FINISHED:

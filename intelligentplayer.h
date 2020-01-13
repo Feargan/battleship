@@ -50,7 +50,7 @@ protected:
 private:
 	bool m_SurroundDestroyed;
 public:
-	CIntelligentPlayer(IGameController* Controller);
+	CIntelligentPlayer(CGameController* Controller);
 	virtual ~CIntelligentPlayer();
 
 	void surroundDestroyed(bool Enable = true);

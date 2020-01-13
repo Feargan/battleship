@@ -11,7 +11,7 @@
 
 class IPlayer;
 
-class IGameController
+class CGameController
 {
 public:
 	class IObserver
@@ -28,8 +28,8 @@ private:
 	std::unordered_set<IObserver*> m_Observers;
 	const CGamePreset* m_Preset;
 public:
-	IGameController(const CGamePreset* Preset = nullptr);
-	virtual ~IGameController();
+	CGameController(const CGamePreset* Preset = nullptr);
+	virtual ~CGameController();
 
 	const IPlayer* whoseTurn() const;
 	virtual const CGameBoard* seat(IPlayer* Player, const CGameBoardBuilder& Builder);

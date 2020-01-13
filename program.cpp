@@ -5,6 +5,7 @@
 
 #include "startgameui.h"
 
+
 bool CProgram::init()
 {
 	std::ios_base::sync_with_stdio(false);
@@ -50,6 +51,11 @@ void CProgram::run()
         sf::Event Event;
 		while (m_Window.pollEvent(Event))
 		{
+			if (Event.type == sf::Event::Closed)
+			{
+				m_Window.close();
+				break;
+			}
 			Screen->handleInput(Event);
 		}
 		Screen->run();

@@ -47,7 +47,7 @@ class CStartGameUi : public IScreenContext, private IControl::IEventListener
 	CGameBoardBuilder m_Board;
 	std::unique_ptr<CIntelligentPlayer> m_Player;
 	CAiPlayer m_AiPlayer;
-	IGameController m_Controller;
+	CGameController m_Controller;
 	CGamePreset m_Preset;
 public:
 	CStartGameUi(const CGameResources& GameResources, const CUiResources& UiResources);

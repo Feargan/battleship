@@ -2,16 +2,16 @@
 #include "gameboard.h"
 #include "player.h"
 
-IGameController::IGameController(const CGamePreset* Preset)
+CGameController::CGameController(const CGamePreset* Preset)
 {
 	m_Preset = Preset;
 }
 
-IGameController::~IGameController()
+CGameController::~CGameController()
 {
 }
 
-bool IGameController::attack(IPlayer * Attacker, const IPlayer* Victim, int x, int y)
+bool CGameController::attack(IPlayer * Attacker, const IPlayer* Victim, int x, int y)
 {
 	if (Attacker != whoseTurn())
 		return false;
@@ -81,7 +81,7 @@ bool IGameController::attack(IPlayer * Attacker, const IPlayer* Victim, int x, i
 	return true;
 }
 
-void IGameController::start()
+void CGameController::start()
 {
 	if (!m_Players.size() || m_Queue.size()) // has it started before?
 		return;
@@ -92,23 +92,23 @@ void IGameController::start()
 	notifyObservers({ CGameEvent::CType::GAME_STARTED });
 }
 
-void IGameController::run()
+void CGameController::run()
 {
 	if (m_Queue.size() && m_Victims.size())
 		m_Queue.front()->play(); // call next player to play if the game is in progress
 }
 
-bool IGameController::isInProgress() const
+bool CGameController::isInProgress() const
 {
 	return m_Victims.size() && m_Queue.size();
 }
 
-const IPlayer * IGameController::whoseTurn() const
+const IPlayer * CGameController::whoseTurn() const
 {
 	return m_Queue.size() ? m_Queue.front() : nullptr;
 }
 
-const CGameBoard * IGameController::seat(IPlayer * Player, const CGameBoardBuilder& Builder)
+const CGameBoard * CGameController::seat(IPlayer * Player, const CGameBoardBuilder& Builder)
 {
 	if (!(m_Players.find(Player) == m_Players.end() && Builder.isReady() && Builder.getPreset() == m_Preset))
 		return nullptr;
@@ -117,17 +117,17 @@ const CGameBoard * IGameController::seat(IPlayer * Player, const CGameBoardBuild
 	return &(m_Players.emplace(Player, Builder.getBoard())).first->second;
 }
 
-void IGameController::addObserver(IObserver * Observer)
+void CGameController::addObserver(IObserver * Observer)
 {
 	m_Observers.insert(Observer);
 }
 
-void IGameController::removeObserver(IObserver * Observer)
+void CGameController::removeObserver(IObserver * Observer)
 {
 	m_Observers.erase(Observer);
 }
 
-std::vector<const IPlayer*> IGameController::getPlayers() const
+std::vector<const IPlayer*> CGameController::getPlayers() const
 {
 	std::vector<const IPlayer*> v;
 	for (auto &p : m_Players)
@@ -135,25 +135,25 @@ std::vector<const IPlayer*> IGameController::getPlayers() const
 	return v;
 }
 
-const IPlayer * IGameController::getSuggestedVictim() const
+const IPlayer * CGameController::getSuggestedVictim() const
 {
 	if(m_Victims.size())
 		return m_Victims.back();
 	return nullptr;
 }
 
-const CGamePreset* IGameController::getPreset() const
+const CGamePreset* CGameController::getPreset() const
 {
 	return m_Preset;
 }
 
-void IGameController::notifyObservers(const CGameEvent& Event)
+void CGameController::notifyObservers(const CGameEvent& Event)
 {
 	for (auto& o : m_Observers)
 		o->onEvent(Event);
 }
 
-void IGameController::prepareVictims()
+void CGameController::prepareVictims()
 {
 	m_Victims.clear();
 	for (auto& p : m_Players)

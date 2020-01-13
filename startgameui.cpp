@@ -236,7 +236,7 @@ void CStartGameUi::onEvent(IControl * Control, int EventId)
 			AiBoard.clear();
 			AiBoard.autoFill();
 		} while (!AiBoard.isReady());
-		m_Controller = IGameController(&m_Preset);
+		m_Controller = CGameController(&m_Preset);
 		m_AiPlayer = CAiPlayer(&m_Controller);
 		m_Controller.seat(&m_AiPlayer, AiBoard);
 		if (m_BotCheck->getState())
@@ -258,7 +258,15 @@ void CStartGameUi::onEvent(IControl * Control, int EventId)
 		}
 		if (!m_Board.isEmpty())
 		{
-			m_Board.autoFill();
+			auto Restore = m_Board;
+			for (int i = 0; i < 1000; i++)
+			{
+				m_Board.autoFill();
+				if (m_Board.isReady())
+					break;
+				m_Board = Restore;
+			}
+			
 			if (!m_Board.isReady())
 			{
 				m_ErrorText->setText("Failed to fill the board, try again");

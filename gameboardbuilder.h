@@ -8,8 +8,8 @@ class CGameBoardBuilder
 	using CField = CGameBoard::CField;
 
 	CGameBoard m_Board;
-	CField& m_Field;
-	std::vector<std::shared_ptr<CShip>>& m_Ships;
+	//CField& m_Field;
+	//std::vector<std::shared_ptr<CShip>> m_Ships;
 
 	int m_Empty;
 

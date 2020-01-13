@@ -2,7 +2,7 @@
 
 #include <optional>
 
-CIntelligentPlayer::CIntelligentPlayer(IGameController* Controller) : IPlayer(Controller), m_SurroundDestroyed(true)
+CIntelligentPlayer::CIntelligentPlayer(CGameController* Controller) : IPlayer(Controller), m_SurroundDestroyed(true)
 {
 }
 

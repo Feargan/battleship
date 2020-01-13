@@ -17,7 +17,7 @@
 #include <array>
 #include <optional>
 
-class CGameUi : public IScreenContext, private IGameController::IObserver, private IControl::IEventListener
+class CGameUi : public IScreenContext, private CGameController::IObserver, private IControl::IEventListener
 {
 	using CPos = sf::Vector2i;
 	static const CPos PLAYER_BOARD_POS;
@@ -29,7 +29,7 @@ class CGameUi : public IScreenContext, private IGameController::IObserver, priva
 	CButton* m_ExitButton;
 	CText* m_VictoryText;
 
-	IGameController* m_Controller;
+	CGameController* m_Controller;
 	CIntelligentPlayer* m_Player;
 	const CGameBoard* m_PlayerBoard;
 	CPos m_PlayerBoardPos;
@@ -44,7 +44,7 @@ class CGameUi : public IScreenContext, private IGameController::IObserver, priva
 
 	bool m_Completed;
 public:
-	CGameUi(IGameController* Controller, CIntelligentPlayer* Player, const CGameBoard* PlayerBoard, const CGameResources& GameResources, const CUiResources& UiResources);
+	CGameUi(CGameController* Controller, CIntelligentPlayer* Player, const CGameBoard* PlayerBoard, const CGameResources& GameResources, const CUiResources& UiResources);
 	~CGameUi();
 
 	bool isCompleted() const;

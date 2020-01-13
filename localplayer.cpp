@@ -2,7 +2,7 @@
 
 
 
-CLocalPlayer::CLocalPlayer(IGameController* Controller)
+CLocalPlayer::CLocalPlayer(CGameController* Controller)
 	: CIntelligentPlayer(Controller)
 {
 }

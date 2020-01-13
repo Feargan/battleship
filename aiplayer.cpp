@@ -2,7 +2,7 @@
 #include "tileset.h"
 
 
-CAiPlayer::CAiPlayer(IGameController* Controller) : CIntelligentPlayer(Controller)
+CAiPlayer::CAiPlayer(CGameController* Controller) : CIntelligentPlayer(Controller)
 {
 }
 

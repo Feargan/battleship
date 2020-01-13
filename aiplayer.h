@@ -4,7 +4,7 @@ class CAiPlayer :
 	public CIntelligentPlayer
 {
 public:
-	CAiPlayer(IGameController* Controller);
+	CAiPlayer(CGameController* Controller);
 	virtual ~CAiPlayer();
 
 	virtual void play() override;

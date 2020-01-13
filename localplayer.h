@@ -17,7 +17,7 @@ class CLocalPlayer : public CIntelligentPlayer
 private:
 	std::unordered_map<const IPlayer*, CContext> m_Enemies;*/
 public:
-	CLocalPlayer(IGameController* Controller); // CGameController*
+	CLocalPlayer(CGameController* Controller); // CGameController*
 	virtual ~CLocalPlayer();
 
 	virtual void play() override;
